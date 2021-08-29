@@ -313,7 +313,7 @@ class ElasticNet(Regression):
     """
 
     """
-    def __init__(self, degree=1, reg_factor=0.05, n_iterations=3000, learning_rate=0.01):
+    def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01):
         """
 
         :param degree:
@@ -322,4 +322,19 @@ class ElasticNet(Regression):
         :param learning_rate:
         """
         self.degree = degree
-        self.regularization = L1_L2_Regularization
+        self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
+        super(ElasticNet, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
+        X = normalize(polynomial_features(X, degree=self.degree))
+        super(ElasticNet, self).fit(X, y)
+
+    def predict(self, X):
+        X = normalize(polynomial_features(X, degree=self.degree))
+        return super(ElasticNet, self).predict(X)
