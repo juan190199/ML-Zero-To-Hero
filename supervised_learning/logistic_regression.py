@@ -34,9 +34,13 @@ class LogisticRegression():
     def fit(self, X, y, n_iterations=4000):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target data
+
+        :return: self
         """
         self.initialize_parameters(X)
         # Tune parameters for n iterations
@@ -54,8 +58,11 @@ class LogisticRegression():
     def predict(self, X):
         """
 
-        :param X:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
         """
         y_predict = np.round(self.sigmoid(X.dot(self.w))).astype(int)
         return y_predict
