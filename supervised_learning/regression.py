@@ -172,7 +172,9 @@ class LinearRegression(Regression):
 
 class LassoRegression(Regression):
     """
-
+    Linear regression model with a regularization factor which does both variable selection
+    and regularization. Model that tries to balance the fit of the model with respect to the training
+    data and the complexity of the model. A large regularization factor with decreases the variance of the model.
     """
     def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01):
         """
@@ -196,9 +198,13 @@ class LassoRegression(Regression):
     def fit(self, X, y):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target values
+
+        :return: self
         """
         X = normalize(polynomial_features(X, degree=self.degree))
         super(LassoRegression, self).fit(X, y)
@@ -206,8 +212,11 @@ class LassoRegression(Regression):
     def predict(self, X):
         """
 
-        :param X:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
         """
         X = normalize(polynomial_features(X, degree=self.degree))
         return super(LassoRegression, self).predict(X)
@@ -215,7 +224,8 @@ class LassoRegression(Regression):
 
 class PolynomialRegression(Regression):
     """
-
+    Performs a non-linear transformation of the data before fitting the model
+    and doing predictions which allows for doing non-linear regression.
     """
     def __init__(self, degree, n_iterations=3000, learning_rate=0.001):
         """
@@ -238,9 +248,13 @@ class PolynomialRegression(Regression):
     def fit(self, X, y):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target values
+
+        :return: self
         """
         X = polynomial_features(X, degree=self.degree)
         super(PolynomialRegression, self).fit(X, y)
@@ -248,14 +262,22 @@ class PolynomialRegression(Regression):
     def predict(self, X):
         """
 
-        :param X:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
         """
         X = polynomial_features(X, degree=self.degree)
         return super(PolynomialRegression, self).predict(X)
 
 
 class RidgeRegression(Regression):
+    """
+    Also referred to as Tikhonov regularization. Linear regression model with a regularization factor.
+    Model that tries to balance the fit of the model with respect to the training data and the complexity
+    of the model. A large regularization factor with decreases the variance of the model.
+    """
     def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001):
         """
 
@@ -274,16 +296,27 @@ class RidgeRegression(Regression):
 
 class PolynomialRidgeRegression(Regression):
     """
-
+    Similar to regular ridge regression except that the data is transformed to allow
+    for polynomial regression.
     """
     def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01, gradient_descent=True):
         """
 
-        :param degree:
-        :param reg_factor:
-        :param n_iterations:
-        :param learning_rate:
-        :param gradient_descent:
+        :param degree: int
+            The degree of the polynomial that the independent variable X will be transformed to.
+
+        :param reg_factor: float
+             The factor that will determine the amount of regularization and feature shrinkage.
+
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
+
+        :param learning_rate: float
+            The step length that will be used when updating the weights.
+
+        :param gradient_descent: boolean
+            True or false depending if gradient descent should be used when training.
+            If false then we use batch optimization by least squares.
         """
         self.degree = degree
         self.regularization = L2_Regularization(alpha=reg_factor)
@@ -292,9 +325,13 @@ class PolynomialRidgeRegression(Regression):
     def fit(self, X, y):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target values
+
+        :return: self
         """
         X = normalize(polynomial_features(X, degree=self.degree))
         super(PolynomialRidgeRegression, self).fit(X, y)
@@ -302,8 +339,11 @@ class PolynomialRidgeRegression(Regression):
     def predict(self, X):
         """
 
-        :param X:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
         """
         X = normalize(polynomial_features(X, degree=self.degree))
         return super(PolynomialRidgeRegression, self).predict(X)
@@ -311,15 +351,23 @@ class PolynomialRidgeRegression(Regression):
 
 class ElasticNet(Regression):
     """
-
+    Regression where a combination of l1 and l2 regularization are used. The
+    ratio of their contributions are set with the 'l1_ratio' parameter.
     """
     def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01):
         """
 
-        :param degree:
-        :param reg_factor:
-        :param n_iterations:
-        :param learning_rate:
+        :param degree: int
+            The degree of the polynomial that the independent variable X will be transformed to.
+
+        :param reg_factor: float
+             The factor that will determine the amount of regularization and feature shrinkage.
+
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
+
+        :param learning_rate: float
+            The step length that will be used when updating the weights.
         """
         self.degree = degree
         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
@@ -328,13 +376,25 @@ class ElasticNet(Regression):
     def fit(self, X, y):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target values
+
+        :return: self
         """
         X = normalize(polynomial_features(X, degree=self.degree))
         super(ElasticNet, self).fit(X, y)
 
     def predict(self, X):
+        """
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
+        """
         X = normalize(polynomial_features(X, degree=self.degree))
         return super(ElasticNet, self).predict(X)
