@@ -39,6 +39,14 @@ class Regression(object):
 
     """
     def __init__(self, n_iterations, learning_rate):
+        """
+
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
+
+        :param learning_rate: float
+            The step length that will be used when updating the weights.
+        """
         self.n_iterations = n_iterations
         self.learning_rate = learning_rate
 
@@ -103,14 +111,15 @@ class LinearRegression(Regression):
     def __init__(self, n_iterations=100, learning_rate=0.001, gradient_descent=True):
         """
 
-        :param n_iterations: int
-            Number of iterations for gradient descent
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
 
         :param learning_rate: float
-            Learning rate for gradient descent
+            The step length that will be used when updating the weights.
 
         :param gradient_descent: boolean
-            Flag for solving method
+            True or false depending if gradient descent should be used when training.
+            If false then we use batch optimization by least squares.
         """
         self.gradient_descent = gradient_descent
         # No regularization
@@ -147,6 +156,20 @@ class LassoRegression(Regression):
 
     """
     def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01):
+        """
+
+        :param degree: int
+            The degree of the polynomial that the independent variable X will be transformed to.
+
+        :param reg_factor: float
+             The factor that will determine the amount of regularization and feature shrinkage.
+
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
+
+        :param learning_rate: float
+            The step length that will be used when updating the weights.
+        """
         self.degree = degree
         self.regularization = L1_Regularization(alpha=reg_factor)
         super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
@@ -165,7 +188,20 @@ class PolynomialRegression(Regression):
 
 
 class RidgeRegression(Regression):
-    ...
+    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001):
+        """
+
+        :param reg_factor: float
+            The factor that will determine the amount of regularization and feature shrinkage.
+
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
+
+        :param learning_rate: float
+            The step length that will be used when updating the weights.
+        """
+        self.regularization = L2_Regularization(alpha=reg_factor)
+        super(RidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
 
 class PolynomialRidgeRegression(Regression):
