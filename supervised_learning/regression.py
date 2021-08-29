@@ -235,7 +235,21 @@ class RidgeRegression(Regression):
 
 
 class PolynomialRidgeRegression(Regression):
-    ...
+    """
+
+    """
+    def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01, gradient_descent=True):
+        self.degree = degree
+        self.regularization = L2_Regularization(alpha=reg_factor)
+        super(PolynomialRidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y):
+        X = normalize(polynomial_features(X, degree=self.degree))
+        super(PolynomialRidgeRegression, self).fit(X, y)
+
+    def predict(self, X):
+        X = normalize(polynomial_features(X, degree=self.degree))
+        return super(PolynomialRidgeRegression, self).predict(X)
 
 
 class ElasticNet(Regression):
