@@ -32,6 +32,22 @@ class L2_Regularization():
         return self.alpha * w
 
 
+class L1_L2_Regularization():
+    def __init__(self, alpha, l1_ratio=0.5):
+        self.alpha = alpha
+        self.l1_ratio = l1_ratio
+
+    def __call__(self, w):
+        l1_contr = self.l1_ratio * np.linalg.norm(w)
+        l2_contr = (1 - self.l1_ratio) * 0.5 * w.T.dot(w)
+        return self.alpha * (l1_contr + l2_contr)
+
+    def grad(self, w):
+        l1_contr = self.l1_ratio * np.sign(w)
+        l2_contr = (1 - self.l1_ratio) * w
+        return self.alpha * (l1_contr + l2_contr)
+
+
 class Regression(object):
     """
     Base regression model. Models the relationship between a scalar dependent variable y and the independent
@@ -178,10 +194,21 @@ class LassoRegression(Regression):
         super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
     def fit(self, X, y):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
         X = normalize(polynomial_features(X, degree=self.degree))
         super(LassoRegression, self).fit(X, y)
 
     def predict(self, X):
+        """
+
+        :param X:
+        :return:
+        """
         X = normalize(polynomial_features(X, degree=self.degree))
         return super(LassoRegression, self).predict(X)
 
@@ -209,10 +236,21 @@ class PolynomialRegression(Regression):
         super(PolynomialRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
     def fit(self, X, y):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
         X = polynomial_features(X, degree=self.degree)
         super(PolynomialRegression, self).fit(X, y)
 
     def predict(self, X):
+        """
+
+        :param X:
+        :return:
+        """
         X = polynomial_features(X, degree=self.degree)
         return super(PolynomialRegression, self).predict(X)
 
@@ -239,18 +277,49 @@ class PolynomialRidgeRegression(Regression):
 
     """
     def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01, gradient_descent=True):
+        """
+
+        :param degree:
+        :param reg_factor:
+        :param n_iterations:
+        :param learning_rate:
+        :param gradient_descent:
+        """
         self.degree = degree
         self.regularization = L2_Regularization(alpha=reg_factor)
         super(PolynomialRidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
     def fit(self, X, y):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
         X = normalize(polynomial_features(X, degree=self.degree))
         super(PolynomialRidgeRegression, self).fit(X, y)
 
     def predict(self, X):
+        """
+
+        :param X:
+        :return:
+        """
         X = normalize(polynomial_features(X, degree=self.degree))
         return super(PolynomialRidgeRegression, self).predict(X)
 
 
 class ElasticNet(Regression):
-    ...
+    """
+
+    """
+    def __init__(self, degree=1, reg_factor=0.05, n_iterations=3000, learning_rate=0.01):
+        """
+
+        :param degree:
+        :param reg_factor:
+        :param n_iterations:
+        :param learning_rate:
+        """
+        self.degree = degree
+        self.regularization = L1_L2_Regularization
