@@ -95,8 +95,11 @@ class Regression(object):
     def predict(self, X):
         """
 
-        :param X:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
         """
         #Insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
