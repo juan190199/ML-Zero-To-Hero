@@ -65,4 +65,16 @@ def standardize(X):
     return X_std
 
 
+def make_diagonal(x):
+    """
+    Converts a vector into a diagonal matrix
+    :param x:
+    :return:
+    """
+    m = np.zeros((len(x), len(x)))
+    for i in range(len(m[0])):
+        m[i, i] = x[i]
+    return m
+
+
 
