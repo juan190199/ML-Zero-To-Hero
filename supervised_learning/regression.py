@@ -115,9 +115,15 @@ class LinearRegression(Regression):
         :param y:
         :return:
         """
-        # If not gradient descent =>
+        # If not gradient descent => Normal equations
         if not self.gradient_descent:
-            pass
+            # Insert constant ones for bias weights
+            X = np.insert(X, 0, 1, axis=1)
+            # Calculate weights by least squares (using Moore-Penrose pseudoinverse)
+            U, S, V = np.linalg.svd(X.T.dot(X))
+            S = np.diag(S)
+            X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
+            self.w = X_sq_reg_inv.dot(X.T).dot(y)
         else:
             super(LinearRegression, self).fit(X, y)
 
