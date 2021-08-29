@@ -49,19 +49,23 @@ class Regression(object):
 
         :param scale: float
             scale of np.random.normal
-        :return:
+
+        :return: self
         """
         limit = 1 / math.sqrt(n_features)
-        self.w = np.random.normal(loc=0, scale=scale,  sizze=(n_features, ))
+        # self.w = np.random.normal(loc=0, scale=scale,  size=(n_features, ))
+        self.w = np.random.uniform(-limit, limit, size=(n_features, ))
 
     def fit(self, X, y):
         """
 
         :param X: ndarray of shape (n_samples, n_features)
             Training data
+
         :param y: ndarray of shape (n_samples, )
             Target data
-        :return:
+
+        :return: self
         """
         # Insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
@@ -93,14 +97,19 @@ class Regression(object):
 
 class LinearRegression(Regression):
     """
-    Linear model
+    Linear model.
     """
     def __init__(self, n_iterations=100, learning_rate=0.001, gradient_descent=True):
         """
 
-        :param n_iterations:
-        :param learning_rate:
-        :param gradient_descent:
+        :param n_iterations: int
+            Number of iterations for gradient descent
+
+        :param learning_rate: float
+            Learning rate for gradient descent
+
+        :param gradient_descent: boolean
+            Flag for solving method
         """
         self.gradient_descent = gradient_descent
         # No regularization
@@ -111,9 +120,13 @@ class LinearRegression(Regression):
     def fit(self, X, y):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_instances, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_instances, )
+            Target values
+
+        :return: self
         """
         # If not gradient descent => Normal equations
         if not self.gradient_descent:
@@ -129,7 +142,21 @@ class LinearRegression(Regression):
 
 
 class LassoRegression(Regression):
-    ...
+    """
+
+    """
+    def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01):
+        self.degree = degree
+        self.regularization = L1_Regularization(alpha=reg_factor)
+        super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y):
+        X = normalize(polynomial_features(X, degree=self.degree))
+        super(LassoRegression, self).fit(X, y)
+
+    def predict(self, X):
+        X = normalize(polynomial_features(X, degree=self.degree))
+        return super(LassoRegression, self).predict(X)
 
 
 class PolynomialRegression(Regression):
