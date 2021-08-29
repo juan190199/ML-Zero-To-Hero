@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+from utils.data_manipulation import (normalize, polynomial_features)
+
 
 class L1_Regularization():
     """
@@ -119,10 +121,10 @@ class LinearRegression(Regression):
     def fit(self, X, y):
         """
 
-        :param X: ndarray of shape (n_instances, n_features)
+        :param X: ndarray of shape (n_samples, n_features)
             Training data
 
-        :param y: ndarray of shape (n_instances, )
+        :param y: ndarray of shape (n_samples, )
             Target values
 
         :return: self
