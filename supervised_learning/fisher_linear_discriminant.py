@@ -3,11 +3,12 @@ import numpy as np
 from utils.data_operation import calculate_covariance_matrix
 
 
-class LDA():
+class FisherLinearDiscriminant():
     """
-    The Linear Discriminant Analysis classifier, also known as Fisher's linear discriminant.
+    Fisher's linear discriminant.
     Can besides from classification also be used to reduce the dimensionaly of the dataset.
     """
+
     def __init__(self):
         self.w = None
 
@@ -72,4 +73,3 @@ class LDA():
             y = 1 * (h < 0)
             y_pred.append(y)
         return y_pred
-
