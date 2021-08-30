@@ -232,9 +232,7 @@ class ClassificationTree(DecisionTree):
         # Calculate information gain
         p = len(y1) / len(y)
         entropy = calculate_entropy(y)
-        info_gain = entropy - p * \
-                    calculate_entropy(y1) - (1 - p) * \
-                    calculate_entropy(y2)
+        info_gain = entropy - p * calculate_entropy(y1) - (1 - p) * calculate_entropy(y2)
 
         return info_gain
 
