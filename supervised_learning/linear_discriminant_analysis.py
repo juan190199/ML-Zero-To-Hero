@@ -1,18 +1,9 @@
 import warnings
 
 import numpy as np
-
 from scipy import linalg
 
-
-import warnings
-
-import numpy as np
-from scipy import linalg
-
-from sklearn.utils import check_X_y, check_array
-
-from utils import logsumexp
+from utils.data_operation import logsumexp
 
 
 class LDA(object):
@@ -72,36 +63,25 @@ class LDA(object):
         Fit LDA model according to the given training data and parameters.
 
         :param X: array-like of shape (n_samples, n_features)
-            Design matrix
+            Training data
 
         :param y: array-like of shape (n_samples,) or (n_samples, n_classes)
-            Target values.
+            Target data
 
         :param store_covariance: bool, default=None
             If True the covariance matrix is computed and stored in 'self.covariance_' attribute
 
         :return:
         """
-        X, y = check_X_y(X, y, ensure_min_samples=2, dtype=[np.float64, np.float32])
         self.classes_ = np.unique(y)
         n_samples, n_features = X.shape
         n_classes = len(self.classes_)
-
-        if n_samples == n_classes:
-            raise ValueError("The number of samples must be larger than the number of classes")
 
         if self.priors is None:
             _, y_t = np.unique(y, return_inverse=True)
             self.priors_ = np.bincount(y_t) / float(len(y))
         else:
             self.priors_ = np.asarray(self.priors)
-
-        if (self.priors_ < 0).any():
-            raise ValueError("Priors must be non-negative")
-
-        if self.priors_.sum() != 1:
-            warnings.warn("The priors do not sum to 1. Renormalizing", UserWarning)
-            self.priors_ = self.priors_ / self.priors.sum()
 
         max_components = min(len(self.classes_) - 1, X.shape[1])
 
@@ -118,6 +98,7 @@ class LDA(object):
         if store_covariance:
             cov = np.empty((n_features, n_features))
 
+        # Normalize data
         for idx in range(n_classes):
             Xg = X[y == idx]
             meang = Xg.mean(axis=0)  # Group mean
@@ -174,12 +155,11 @@ class LDA(object):
         Computes values related to each class, per sample.
 
         :param X:array-like of shape (n_samples, n_features)
-            Array of samples (test vectors)
+            Test data
 
         :return: array-like of shape (n_samples, n_classes) or (n_samples,)
             Decision function values related to each class, per sample.
         """
-        X = check_array(X, ensure_2d=True)
         # Center and scale data
         X = np.dot(X - self.xbar_, self.scalings_)
         return np.dot(X, self.coef_.T) + self.intercept_
@@ -188,7 +168,7 @@ class LDA(object):
         """
 
         :param X:array-like of shape (n_samples, n_features)
-            Array of samples (test vectors)
+            Test data
 
         :return: array-like of shape (n_samples, n_classes) or (n_samples,)
             Decision function values related to each class, per sample.
@@ -204,7 +184,7 @@ class LDA(object):
         Perform classification on an array of test vectors X.
 
         :param X: array-like of shape (n_samples, n_features)
-            Array of samples (test vectors)
+            Test data
 
         :return: ndarray of shape (n_samples,)
             Vector of predicted labels for each sample
