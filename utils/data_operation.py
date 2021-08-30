@@ -1,7 +1,17 @@
-import sys
 
-import math
 import numpy as np
+
+
+def calculate_variance(X):
+    """
+
+    :param X:
+    :return:
+    """
+    mean = np.ones(np.shape(X)) * X.mean(0)
+    n_samples = np.shape(X)[0]
+    variance = (1 / n_samples) * np.diag((X - mean).T.dot(X - mean))
+    return variance
 
 
 def euclidean_distance(x1, x2):
