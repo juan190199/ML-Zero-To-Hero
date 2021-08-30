@@ -1,5 +1,7 @@
 import numpy as np
 
+from utils.data_operation import calculate_variance
+
 
 class DecisionNode():
     """
@@ -43,7 +45,7 @@ class DecisionTree(object):
         # If gradient boost
         self.loss = loss
 
-    def fit(self, X, y, loss=None):
+    def fit(self, X, y):
         """
 
         :param X:
@@ -53,7 +55,6 @@ class DecisionTree(object):
         """
         self.one_dim = len(np.shape(y)) == 1
         self.root = self._build_tree(X, y)
-        self.loss = loss
 
     def _build_tree(self, X, y, current_depth=0):
         """
@@ -161,4 +162,105 @@ class DecisionTree(object):
         :param indent:
         :return:
         """
-        ...
+        if not tree:
+            tree = self.root
+
+        if tree.value is not None:
+            print(tree.value)
+        else:
+            # Print test
+            print('%s:%s? ' % (tree.feature_i, tree.threshold))
+            # Print the true scenario
+            print('%sT->' % (indent), end='')
+            self.print_tree(tree.true_branch, indent + indent)
+            # Print the false scenario
+            print('%sF->' % (indent), end='')
+            self.print_tree(tree.false_branch, indent + indent)
+
+
+class RegressionTree(DecisionTree):
+    def _calculate_variance_reduction(self, y, y1, y2):
+        """
+
+        :param y:
+        :param y1:
+        :param y2:
+        :return:
+        """
+        var_tot = calculate_variance(y)
+        var_1 = calculate_variance(y1)
+        var_2 = calculate_variance(y2)
+        frac_1 = len(y1) / len(y)
+        frac_2 = len(y2) / len(y)
+
+        # Calculate the variance reduction
+        variance_reduction = var_tot - (frac_1 * var_1 + frac_2 * var_2)
+
+        return sum(variance_reduction)
+
+    def _mean_of_y(self, y):
+        """
+
+        :param y:
+        :return:
+        """
+        value = np.mean(y, axis=0)
+        return value if len(value) > 1 else value[0]
+
+    def fit(self, X, y):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
+        self._impurity_calculation = self._calculate_variance_reduction
+        self._leaf_value_calculation = self._mean_of_y
+        super(RegressionTree, self).fit(X, y)
+
+
+
+class ClassificationTree(DecisionTree):
+    def _calculate_information_gain(self, y, y1, y2):
+        """
+
+        :param y:
+        :param y1:
+        :param y2:
+        :return:
+        """
+        # Calculate information gain
+        p = len(y1) / len(y)
+        entropy = calculate_entropy(y)
+        info_gain = entropy - p * \
+                    calculate_entropy(y1) - (1 - p) * \
+                    calculate_entropy(y2)
+
+        return info_gain
+
+    def _majority_vote(self, y):
+        """
+
+        :param y:
+        :return:
+        """
+        most_common = None
+        max_count = 0
+        for label in np.unique(y):
+            # Count number of occurences of samples with label
+            count = len(y[y == label])
+            if count > max_count:
+                most_common = label
+                max_count = count
+        return most_common
+
+    def fit(self, X, y):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
+        self._impurity_calculation = self._calculate_information_gain
+        self._leaf_value_calculation = self._majority_vote
+        super(ClassificationTree, self).fit(X, y)
