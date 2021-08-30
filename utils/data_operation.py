@@ -27,3 +27,17 @@ def calculate_covariance_matrix(X, Y=None):
     covariance_matrix = (1 / (n_samples - 1)) * (X - X.mean(axis=0)).T.dot(Y - Y.mean(axis=0))
 
     return np.array(covariance_matrix, dtype=float)
+
+
+def logsumexp(arr, axis=0):
+    """
+    Computes the sum of arr assuming arr is in the log domain.
+    Returns log(sum(exp(arr))) while minimizing the possibility of over/underflow.
+    """
+    arr = np.rollaxis(arr, axis)
+    # Use the max to normalize, as with the log this is what accumulates
+    # the less errors
+    vmax = arr.max(axis=0)
+    out = np.log(np.sum(np.exp(arr - vmax), axis=0))
+    out += vmax
+    return out
