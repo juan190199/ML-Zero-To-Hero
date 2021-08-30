@@ -1,5 +1,21 @@
-
+import math
 import numpy as np
+
+
+def calculate_entropy(y):
+    """
+
+    :param y:
+    :return:
+    """
+    log2 = lambda x: math.log(x) / math.log(2)
+    unique_labels = np.unique(y)
+    entropy = 0
+    for label in unique_labels:
+        count = len(y[y == label])
+        p = count / len(y)
+        entropy += -p * log2(p)
+    return entropy
 
 
 def calculate_variance(X):
