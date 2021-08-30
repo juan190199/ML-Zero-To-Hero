@@ -5,7 +5,8 @@ from utils.data_operation import calculate_covariance_matrix
 
 class LDA():
     """
-
+    The Linear Discriminant Analysis classifier, also known as Fisher's linear discriminant.
+    Can besides from classification also be used to reduce the dimensionaly of the dataset.
     """
     def __init__(self):
         self.w = None
@@ -13,9 +14,14 @@ class LDA():
     def transform(self, X, y):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, n_features)
+            Target data
+
+        :return: ndarray of shape (n_samples, )
+            Projected data
         """
         self.fit(X, y)
         # Project data onto vector
@@ -25,9 +31,13 @@ class LDA():
     def fit(self, X, y):
         """
 
-        :param X:
-        :param y:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, n_features)
+            Target data
+
+        :return: self
         """
         # Separate data by class
         X1 = X[y == 0]
@@ -50,8 +60,11 @@ class LDA():
     def predict(self, X):
         """
 
-        :param X:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predictions for test data
         """
         y_pred = []
         for sample in X:
