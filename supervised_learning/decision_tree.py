@@ -219,7 +219,6 @@ class RegressionTree(DecisionTree):
         super(RegressionTree, self).fit(X, y)
 
 
-
 class ClassificationTree(DecisionTree):
     def _calculate_information_gain(self, y, y1, y2):
         """
