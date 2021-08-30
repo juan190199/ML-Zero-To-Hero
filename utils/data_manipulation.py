@@ -6,6 +6,21 @@ import numpy as np
 from itertools import combinations_with_replacement
 
 
+def divide_on_feature(X, y, seed=None):
+    """
+
+    :param X:
+    :param y:
+    :param seed:
+    :return:
+    """
+    if seed:
+        np.random.seed(seed)
+    idx = np.arange(X.shape[0])
+    np.random.shuffle(idx)
+    return X[idx], y[idx]
+
+
 def polynomial_features(X, degree):
     """
 
