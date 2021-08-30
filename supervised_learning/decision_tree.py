@@ -1,13 +1,13 @@
 import numpy as np
 
-from utils.data_operation import calculate_variance
+from utils.data_manipulation import divide_on_feature
+from utils.data_operation import (calculate_variance, calculate_entropy)
 
 
 class DecisionNode():
     """
 
     """
-
     def __init__(self, feature_i=None, threshold=None, value=None, true_branch=None, false_branch=None):
         self.feature_i = feature_i  # Index for the feature
         self.threshold = threshold  # Threshold value for feature
@@ -26,7 +26,7 @@ class DecisionTree(object):
 
         :param min_samples_split:
         :param min_impurity:
-        :param math_depth:
+        :param max_depth:
         :param loss:
         """
         self.root = None  # Root node
@@ -50,7 +50,6 @@ class DecisionTree(object):
 
         :param X:
         :param y:
-        :param loss:
         :return:
         """
         self.one_dim = len(np.shape(y)) == 1
@@ -108,7 +107,7 @@ class DecisionTree(object):
                                 'leftX': Xy1[:, :n_features],
                                 'lefty': Xy1[:, n_features:],
                                 'rightX': Xy2[:, :n_features],
-                                'lefty': Xy2[:, n_features:]
+                                'righty': Xy2[:, n_features:]
                             }
         if largest_impurity > self.min_impurity:
             # Build subtrees for the right and left branches
