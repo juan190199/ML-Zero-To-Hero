@@ -119,7 +119,6 @@ class DecisionTree(object):
         leaf_value = self._leaf_value_calculation(y)
         return DecisionNode(value=leaf_value)
 
-
     def predict_value(self, x, tree=None):
         """
 
@@ -127,3 +126,39 @@ class DecisionTree(object):
         :param tree:
         :return:
         """
+        if tree is None:
+            tree = self.root
+
+        if tree.value is not None:
+            return tree.value
+
+        # Choose feature to be tested
+        feature_value = x[tree.feature_i]
+
+        # Determine if we will follow left or right branch
+        branch = tree.false_branch
+        if isinstance(feature_value, int) or isinstance(feature_value, float):
+            if feature_value >= tree.threshold:
+                branch = tree.true_branch
+        elif feature_value == tree.threshold:
+            branch = tree.true_branch
+
+        # Test subtree
+
+    def predict(self, X):
+        """
+
+        :param X:
+        :return:
+        """
+        y_pred = [self.predict_value(sample) for sample in X]
+        return y_pred
+
+    def print_tree(self, tree=None, indent=' '):
+        """
+
+        :param tree:
+        :param indent:
+        :return:
+        """
+        ...
