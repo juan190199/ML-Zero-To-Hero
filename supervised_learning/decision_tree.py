@@ -1,262 +1,146 @@
 import numpy as np
 
-from utils.data_manipulation import divide_on_feature
-from utils.data_operation import (calculate_variance, calculate_entropy)
+from base import (Node, Tree)
 
 
-class DecisionNode():
+def make_decision_split_node(node, feature_indices):
     """
 
+    :param node: Node
+        Node to be split
+
+    :param feature_indices: ndarray of shape (D_try, )
+        Contains feature indices to be considered in the present split
+
+    :return: tuple
+        Tuple of left and right children nodes (to be placed on the stack)
     """
-    def __init__(self, feature_i=None, threshold=None, value=None, true_branch=None, false_branch=None):
-        self.feature_i = feature_i  # Index for the feature
-        self.threshold = threshold  # Threshold value for feature
-        self.value = value  # Value if the node is a leaf in the tree
-        self.true_branch = true_branch  # 'Left' subtree
-        self.false_branch = false_branch  # 'Right' subtree
+    n_samples_node, n_features = node.data.shape
+
+    # Find best feature j (among 'feature_indices') and best threshold t for the split
+    e_min = 1e100
+    j_min, t_min = 0, 0
+    for j in feature_indices:
+        # Remove duplicate features
+        dj = np.sort(np.unique(node.data[:, j]))
+        # Compute candidate thresholds
+        tj = (dj[1:] + dj[:-1]) / 2
+
+        # Compute Gini-impurity of resulting children nodes for each candidate threshold
+        for t in tj:
+            left_indices = node.data[:, j] <= t
+
+            nl = np.sum(node.data[:, j] <= t)
+            ll = node.labels[left_indices]
+            el = nl * (1 - np.sum(np.square(np.bincount(ll) / nl)))
+
+            nr = n_samples_node - nl
+            # lr = node.labels[node.data[:, j] > t]
+            lr = node.labels[~left_indices]
+            er = nr * (1 - np.sum(np.square(np.bincount(lr) / nr)))
+
+            if el + er < e_min:
+                e_min = el + er
+                j_min = j
+                t_min = t
+
+    # Create children
+    left = Node()
+    right = Node()
+
+    # Initialize 'left' and 'right' with the data subsets and labels
+    # according to the optimal split found above
+    left.data = node.data[node.data[:, j_min] <= t_min, :]
+    left.labels = node.labels[node.data[:, j_min] <= t_min]
+
+    right.data = node.data[node.data[:, j_min] > t_min, :]
+    right.labels = node.labels[node.data[:, j_min] > t_min]
+
+    node.left = left
+    node.right = right
+    node.feature = j_min
+    node.threshold = t_min
+
+    return left, right
 
 
-class DecisionTree(object):
+def make_decision_leaf_node(node):
     """
-    Super class of RegressionTree and ClassificationTree
+    Compute and store leaf response
+
+    :param node: Node
+        Node that has reached termination criterion
+
+    :return:
+    """
+    node.n_samples = node.labels.shape[0]
+    node.response = np.bincount(node.labels, minlength=10) / node.n_samples
+
+
+def node_is_pure(node):
+    """
+    Check if node contains instances of the same class
+
+    :param node: Node
+        Node to be checked if has reached termination criterion
+
+    :return: bool
+    True, if given node is pure. Otherwise, false
+    """
+    return np.unique(node.labels).shape[0] == 1
+
+
+class DecisionTree(Tree):
+    """
+    Decision Tree: Tree-like model that predicts the value of a target variable based on several input variables.
     """
 
-    def __init__(self, min_samples_split=2, min_impurity=1e-7, max_depth=float('inf'), loss=None):
+    def __init__(self):
+        super(DecisionTree, self).__init__()
+
+    def fit(self, data, labels, n_min=20):
         """
 
-        :param min_samples_split:
-        :param min_impurity:
-        :param max_depth:
-        :param loss:
-        """
-        self.root = None  # Root node
-        # Minimum number of samples to justify split
-        self.min_samples_split = min_samples_split
-        # Minimum impurity to justify split
-        self.min_impurity = min_impurity
-        # Maximum depth to grow the tree to
-        self.max_depth = max_depth
-        # Function to calculate impurity
-        self._impurity_calculation = None
-        # Function to determine prediction y at leaf node
-        self._leaf_value_calculation = None
-        # If y is one-hot encoded (multi-dim) or not (one-dim)
-        self.one_dim = None
-        # If gradient boost
-        self.loss = loss
+        :param data: ndarray of shape (n_instances, n_features)
+            Training data
 
-    def fit(self, X, y):
-        """
+        :param labels: ndarray of shape (n_instances, )
+            Target data
 
-        :param X:
-        :param y:
+        :param n_min: int, default=20
+            The minimum number of samples required to split an internal node
+
         :return:
         """
-        self.one_dim = len(np.shape(y)) == 1
-        self.root = self._build_tree(X, y)
+        n_samples, n_features = data.shape
+        n_possible_features = int(np.sqrt(n_features))  # Number of features to consider for each split decision
 
-    def _build_tree(self, X, y, current_depth=0):
+        # Initialize the root node
+        self.root.data = data
+        self.root.labels = labels
+
+        # Build the tree
+        stack = [self.root]
+        while len(stack):
+            node = stack.pop()
+            n_samples_node = node.data.shape[0]  # Number of instances in present node
+            if n_samples_node >= n_min and not node_is_pure(node):
+                perm = np.random.permutation(n_features)
+                left, right = make_decision_split_node(node, perm[:n_possible_features])
+                stack.append(left)
+                stack.append(right)
+            else:
+                make_decision_leaf_node(node)
+
+    def predict(self, x):
         """
+        Computes p(y | x)
 
-        :param X:
-        :param y:
-        :param current_depth:
-        :return:
+        :param x: ndarray of shape (1, n_features)
+            Sample point (test instance)
+
+        :return: int
+            Returns posterior probability p(y | x)
         """
-        largest_impurity = 0
-        best_criteria = None  # Feature index and threshold
-        best_sets = None  # Subsets of the data
-
-        if len(np.shape(y)) == 1:
-            y = np.expand_dims(y, axis=1)
-
-        # Add y as last column of X
-        Xy = np.concatenate((X, y), axis=1)
-
-        n_samples, n_features = np.shape(X)
-
-        if n_samples >= self.min_samples_split and current_depth <= self.max_depth:
-            # Calculate impurity
-            for feature_i in range(n_features):
-                # All values of feature i
-                feature_values = np.expand_dims(X[:, feature_i], axis=1)
-                unique_values = np.unique(feature_values)
-
-                # Iterate through all unique values of feature column i and calculate the impurity
-                for threshold in unique_values:
-                    # Divide X and y depending on if the feature value of X at index feature_i meets the threshold
-                    Xy1, Xy2 = divide_on_feature(Xy, feature_i, threshold)
-
-                    if len(Xy1) > 0 and len(Xy2) > 0:
-                        # Select the y-values of the two sets
-                        y1 = Xy1[:, n_features:]
-                        y2 = Xy2[:, n_features:]
-
-                        # Calculate impurity
-                        impurity = self._impurity_calculation(y, y1, y2)
-
-                        # If this threshold resulted in a higher information gain than previously recorded one,
-                        # then save the threshold value and the feature index
-                        if impurity > largest_impurity:
-                            largest_impurity = impurity
-                            best_criteria = {
-                                'feature_i': feature_i,
-                                'threshold': threshold
-                            }
-                            best_sets = {
-                                'leftX': Xy1[:, :n_features],
-                                'lefty': Xy1[:, n_features:],
-                                'rightX': Xy2[:, :n_features],
-                                'righty': Xy2[:, n_features:]
-                            }
-        if largest_impurity > self.min_impurity:
-            # Build subtrees for the right and left branches
-            true_branch = self._build_tree(best_sets['leftX'], best_sets['lefty'], current_depth + 1)
-            false_branch = self._build_tree(best_sets['rightX'], best_sets['righty'], current_depth + 1)
-            return DecisionNode(feature_i=best_criteria['feature_i'], threshold=best_criteria['threshold'],
-                                true_branch=true_branch, false_branch=false_branch)
-
-        leaf_value = self._leaf_value_calculation(y)
-        return DecisionNode(value=leaf_value)
-
-    def predict_value(self, x, tree=None):
-        """
-
-        :param x:
-        :param tree:
-        :return:
-        """
-        if tree is None:
-            tree = self.root
-
-        if tree.value is not None:
-            return tree.value
-
-        # Choose feature to be tested
-        feature_value = x[tree.feature_i]
-
-        # Determine if we will follow left or right branch
-        branch = tree.false_branch
-        if isinstance(feature_value, int) or isinstance(feature_value, float):
-            if feature_value >= tree.threshold:
-                branch = tree.true_branch
-        elif feature_value == tree.threshold:
-            branch = tree.true_branch
-
-        # Test subtree
-
-    def predict(self, X):
-        """
-
-        :param X:
-        :return:
-        """
-        y_pred = [self.predict_value(sample) for sample in X]
-        return y_pred
-
-    def print_tree(self, tree=None, indent=' '):
-        """
-
-        :param tree:
-        :param indent:
-        :return:
-        """
-        if not tree:
-            tree = self.root
-
-        if tree.value is not None:
-            print(tree.value)
-        else:
-            # Print test
-            print('%s:%s? ' % (tree.feature_i, tree.threshold))
-            # Print the true scenario
-            print('%sT->' % (indent), end='')
-            self.print_tree(tree.true_branch, indent + indent)
-            # Print the false scenario
-            print('%sF->' % (indent), end='')
-            self.print_tree(tree.false_branch, indent + indent)
-
-
-class RegressionTree(DecisionTree):
-    def _calculate_variance_reduction(self, y, y1, y2):
-        """
-
-        :param y:
-        :param y1:
-        :param y2:
-        :return:
-        """
-        var_tot = calculate_variance(y)
-        var_1 = calculate_variance(y1)
-        var_2 = calculate_variance(y2)
-        frac_1 = len(y1) / len(y)
-        frac_2 = len(y2) / len(y)
-
-        # Calculate the variance reduction
-        variance_reduction = var_tot - (frac_1 * var_1 + frac_2 * var_2)
-
-        return sum(variance_reduction)
-
-    def _mean_of_y(self, y):
-        """
-
-        :param y:
-        :return:
-        """
-        value = np.mean(y, axis=0)
-        return value if len(value) > 1 else value[0]
-
-    def fit(self, X, y):
-        """
-
-        :param X:
-        :param y:
-        :return:
-        """
-        self._impurity_calculation = self._calculate_variance_reduction
-        self._leaf_value_calculation = self._mean_of_y
-        super(RegressionTree, self).fit(X, y)
-
-
-class ClassificationTree(DecisionTree):
-    def _calculate_information_gain(self, y, y1, y2):
-        """
-
-        :param y:
-        :param y1:
-        :param y2:
-        :return:
-        """
-        # Calculate information gain
-        p = len(y1) / len(y)
-        entropy = calculate_entropy(y)
-        info_gain = entropy - p * calculate_entropy(y1) - (1 - p) * calculate_entropy(y2)
-
-        return info_gain
-
-    def _majority_vote(self, y):
-        """
-
-        :param y:
-        :return:
-        """
-        most_common = None
-        max_count = 0
-        for label in np.unique(y):
-            # Count number of occurences of samples with label
-            count = len(y[y == label])
-            if count > max_count:
-                most_common = label
-                max_count = count
-        return most_common
-
-    def fit(self, X, y):
-        """
-
-        :param X:
-        :param y:
-        :return:
-        """
-        self._impurity_calculation = self._calculate_information_gain
-        self._leaf_value_calculation = self._majority_vote
-        super(ClassificationTree, self).fit(X, y)
+        leaf = self.find_leaf(x)
+        return leaf.response
