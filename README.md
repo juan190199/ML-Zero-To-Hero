@@ -13,7 +13,7 @@
 - [Elastic Net](supervised_learning/regression.py)
 - [Fisher Linear Discriminant](supervised_learning/fisher_linear_discriminant.py)
 - [Generative Classifier (by Density Tree)](supervised_learning/generative_classifier.py)
-- [K Neares Neighbors](supervised_learning/k_nearest_neighbors.py)
+- [K Nearest Neighbors](supervised_learning/k_nearest_neighbors.py)
 - [Lasso Regression](supervised_learning/regression.py)
 - [Linear Discriminant Analysis](supervised_learning/linear_discriminant_analysis.py)
 - [Linear Regression](supervised_learning/regression.py)
