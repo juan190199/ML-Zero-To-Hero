@@ -1,6 +1,6 @@
 import numpy as np
 
-from base import (Node, Tree)
+from utils.data_manipulation import (Node, Tree)
 
 
 def make_density_split_node(node, n_samples, feature_indices):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from base import (Node, Tree)
+from utils.data_manipulation import (Node, Tree)
 
 
 def make_decision_split_node(node, feature_indices):
