@@ -1,7 +1,7 @@
 import numpy as np
 
-from density_tree import DensityTree
-from density_forest import DensityForest
+from supervised_learning.density_tree import DensityTree
+from supervised_learning.density_forest import DensityForest
 
 
 class GenerativeClassifier:
