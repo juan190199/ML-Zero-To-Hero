@@ -6,19 +6,23 @@ import numpy as np
 from itertools import combinations_with_replacement
 
 
-def divide_on_feature(X, y, seed=None):
-    """
+class Node:
+    pass
 
-    :param X:
-    :param y:
-    :param seed:
-    :return:
-    """
-    if seed:
-        np.random.seed(seed)
-    idx = np.arange(X.shape[0])
-    np.random.shuffle(idx)
-    return X[idx], y[idx]
+
+class Tree:
+    def __init__(self):
+        self.root = Node()
+
+    def find_leaf(self, x):
+        node = self.root
+        while hasattr(node, 'feature'):
+            j = node.feature
+            if x[j] <= node.threshold:
+                node = node.left
+            else:
+                node = node.right
+        return node
 
 
 def polynomial_features(X, degree):
@@ -33,6 +37,7 @@ def polynomial_features(X, degree):
     :return:
     """
     n_samples, n_features = X.shape
+
     def index_combinations():
         combs = [combinations_with_replacement(range(n_features), i) for i in range(0, degree + 1)]
         flat_combs = [item for sublist in combs for item in sublist]
@@ -90,6 +95,3 @@ def make_diagonal(x):
     for i in range(len(m[0])):
         m[i, i] = x[i]
     return m
-
-
-
