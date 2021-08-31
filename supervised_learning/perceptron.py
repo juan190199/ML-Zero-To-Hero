@@ -16,10 +16,19 @@ class Perceptron():
     def __init__(self, n_iterations=20000, activation_function=Sigmoid, loss=SquareLoss, learning_rate=0.01):
         """
 
-        :param n_iterations:
-        :param activation_function:
-        :param loss:
-        :param learning_rate:
+        :param n_iterations: float
+            Number of training iterations the algorithm will tune the weights for
+
+        :param activation_function: class
+            The activation that shall be used for each neuron
+            Possible choices: Sigmoid, ExpLU, ReLU, LeakyReLU, SoftPlus, TanH
+
+        :param loss: class
+            The loss function used to assess the model's performance.
+            Possible choices: SquareLoss, CrossEntropy
+
+        :param learning_rate: float
+            Step length that will be used when updating the weights
         """
         self.n_iterations = n_iterations
         self.learning_rate = learning_rate
@@ -28,6 +37,16 @@ class Perceptron():
         self.progressbar = progressbar.ProgressBar(widgets=bar_widgets)
 
     def fit(self, X, y):
+        """
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target data
+
+        :return: self
+        """
         n_samples, n_features = np.shape(X)
         _, n_outputs = np.shape(y)
 
@@ -52,8 +71,11 @@ class Perceptron():
     def predict(self, X):
         """
 
-        :param X:
-        :return:
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
         """
         y_pred = self.activation_function(X.dot(self.w) + self.b)
         return y_pred
