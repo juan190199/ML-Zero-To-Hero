@@ -24,6 +24,23 @@ def euclidean_distance(x1, x2):
     return distance
 
 
+def accuracy_score(y, y_pred):
+    """
+    Compare ground truth y to predictions y_pred and return the accuracy
+
+    :param y: ndarray of shape (n_samples, )
+        Target values
+
+    :param y_pred: ndarray of shape (n_samples, )
+        Predicted values
+
+    :return: float
+        Accuracy of comparison between y and y_pred
+    """
+    accuracy = np.sum(y == y_pred, axis=0) / len(y)
+    return accuracy
+
+
 def calculate_covariance_matrix(X, Y=None):
     """
 
