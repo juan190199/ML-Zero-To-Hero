@@ -1,7 +1,8 @@
 # Machine Learning From Scratch
 
 ## About
-Python implementations from scratch of some of the fundamental Machine Learning models and algorithms. The purpose of this project is to present the inner workings of the algorithms in a transparent way 
+Python implementations from scratch of some of the fundamental Machine Learning models and algorithms. 
+The purpose of this project is to present the inner workings of the algorithms in a transparent way. 
 
 ## Table of contents
 
