@@ -5,6 +5,18 @@ Python implementations from scratch of some of the fundamental Machine Learning 
 The purpose of this project is to present the inner workings of the algorithms in a transparent way. 
 
 ## Table of contents
+- [Machine Learning from Scratch](#machine-learning-from-scratch)
+  - [About](#about)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Implementations](#implementations)
+    - [Supervised Learning](#supervised-learning)
+    - [Unsupervised Learning](#unsupervised-learning)
+    - [Reinforcement Learning](#reinforcement-learning)
+    - [Deep Learning](#deep-learning)
+  - [Examples](#examples)
+
+## Installation
 
 ## Implementations
 ### Supervised Learning
@@ -32,4 +44,6 @@ The purpose of this project is to present the inner workings of the algorithms i
 ### Reinforcement Learning
 
 ### Deep Learning
+
+## Examples
 
