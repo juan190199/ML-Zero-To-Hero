@@ -40,18 +40,6 @@ class MultilayerPerceptron():
 
         :return:
         """
-
-    def fit(self, X, y):
-        """
-
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
-
-        :param y: ndarray of shape (n_samples, )
-            Target data
-
-        :return:
-        """
         n_samples, n_features = np.shape(X)
         _, n_outputs = y.shape
 
@@ -76,14 +64,28 @@ class MultilayerPerceptron():
 
         :return:
         """
-        # Forward propagation
-        z1 = X.dot(self.w1) + self.b1
-        a1 = self.hidden_activation(z1)
-        z2 = a1.dot(self.w2) + self.b2
-        y_pred = self.output_activation(z2)
+        self._initialize_weights(X, y)
+        for i in range(self.n_iterations):
+            # Forward propagation
+            z1 = X.dot(self.w1) + self.b1
+            a1 = self.hidden_activation(z1)
+            z2 = a1.dot(self.w2) + self.b2
+            y_pred = self.output_activation(z2)
 
-        # Backpropagation
-        ...
+            # Backpropagation
+            # Gradient w.r.t. output layer
+            grad_wrt_z2 = self.loss.gradient(y, y_pred) * self.output_activation.gradient(z2)
+            grad_wrt_w2 = a1.T.dot(grad_wrt_z2)
+            grad_wrt_b2 = np.sum(grad_wrt_z2, axis=0, keepdims=True)
+            grad_wrt_z1 = grad_wrt_z2.dot(self.w2.T) * self.hidden_activation.gradient(z1)
+            grad_wrt_w1 = X.T.dot(grad_wrt_z1)
+            grad_wrt_b1 = np.sum(grad_wrt_z1, axis=0, keepdims=True)
+
+            # Update weights
+            self.w2 -= self.learning_rate * grad_wrt_w2
+            self.b2 -= self.learning_rate * grad_wrt_b2
+            self.w1 -= self.learning_rate * grad_wrt_w1
+            self.b1 -= self.learning_rate * grad_wrt_b1
 
     def predict(self, X):
         """
