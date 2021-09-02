@@ -61,3 +61,70 @@ class Layer(object):
         :return:
         """
         raise NotImplementedError
+
+
+class Dense(Layer):
+    """
+    A fully-connected NN layer
+    """
+
+    def __init__(self, n_units, input_shape=None):
+        """
+
+        :param n_units: int
+            Number of neurons in the layer
+
+        :param input_shape: tuple
+            Expected input shape of the layer.
+            For dense layers, a single digit indicating the number of features of the input
+            must be specified if it is the first layer in the network
+        """
+        self.layer_input = None
+        self.input_shape = input_shape
+        self.n_units = n_units
+        self.trainable = True
+        self.w = None
+        self.b = None
+
+    def initialize(self, optimizer):
+        """
+
+        :param optimizer:
+        :return:
+        """
+        # Initialize the weights
+        limit = 1 / math.sqrt(self.input.shape[0])
+        self.w = np.random.uniform(-limit, limit, (self.input.shape[0], self.n_units))
+        self.b = np.zeros((1, self.n_units))
+        # Weight optimizers
+        self.w_opt = copy.copy(optimizer)
+        self.b_opt = copy.copy(optimizer)
+
+    def parameters(self):
+        return np.prod(self.w.shape) + np.prod(self.b.shape)
+
+    def forward_pass(self, X, training):
+        self.layer_input = X
+        return X.dot(self.w) + self.b
+
+    def backward_pass(self, accum_grad):
+        # Save weights used during forward pass
+        w = self.w
+
+        if self.trainable:
+            # Calculate gradient w.r.t. layer weights
+            grad_w = self.layer_input.T.dot(accum_grad)
+            grad_b = np.sum(accum_grad, axis=0, keepdims=True)
+
+            # Update the layers weight
+            # w = w - self.learning_rate * grad_w
+            self.w = self.w_opt.update(self.w, grad_w)
+            self.b = self.b_opt.update(self.b, grad_b)
+
+        # Return accumulated gradient for next_layer
+        # Calculated based on the weights used during the forward pass
+        accum_grad = accum_grad.dot(w.T)
+        return accum_grad
+
+    def output_shape(self):
+        return (self.n_units,)
