@@ -60,7 +60,9 @@ class NeuralNetwork():
         :param y:
         :return:
         """
-        ...
+        y_pred = self._forward_pass(X)
+        loss = np.mean(self.loss_function.loss(y, y_pred))
+        acc = self.loss_function.acc(y, y_pred)
 
     def train_on_batch(self, X, y):
         """
@@ -69,7 +71,13 @@ class NeuralNetwork():
         :param y:
         :return:
         """
-        ...
+        y_pred = self._forward_pass(X)
+        loss = np.mean(self.loss_function.loss(y, y_pred))
+        acc = self.loss_function.acc(y, y_pred)
+        # Calculate the gradient of the loss function w.r.t. y_pred
+        loss_grad = self.loss_function.gradient(y, y_pred)
+        # Backpropagate
+        self._backward_pass(loss_grad=loss_grad)
 
     def fit(self, X, y, n_epochs, batch_size):
         """
@@ -80,7 +88,7 @@ class NeuralNetwork():
         :param batch_size:
         :return:
         """
-        ...
+
 
     def _forward_pass(self, X, training=True):
         """
