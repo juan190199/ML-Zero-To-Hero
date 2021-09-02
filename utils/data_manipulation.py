@@ -44,6 +44,38 @@ def polynomial_features(X, degree):
         return flat_combs
 
 
+def shuffle_data(X, y, seed=None):
+    """
+
+    :param X:
+    :param y:
+    :param seed:
+    :return:
+    """
+    if seed:
+        np.random.seed(seed)
+    idx = np.arange(X.shape[0])
+    np.random.shuffle(idx)
+    return X[idx], y[idx]
+
+
+def batch_iterator(X, y=None, batch_size=64):
+    """
+
+    :param X:
+    :param y:
+    :param batch_size:
+    :return:
+    """
+    n_samples = X.shape[0]
+    for i in np.arange(0, n_samples, batch_size):
+        begin, end = i, min(i + batch_size, n_samples)
+        if y is not None:
+            yield X[begin:end], y[begin:end]
+        else:
+            yield X[begin:end]
+
+
 def normalize(X, axis=-1, order=2):
     """
     Normalize dataset X
