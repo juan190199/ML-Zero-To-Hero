@@ -44,6 +44,10 @@ The purpose of this project is to present the inner workings of the algorithms i
 ### Reinforcement Learning
 
 ### Deep Learning
+- [Neural Network](deep_learning/neural_network.py)
+- [Layers](deep_learning/layers.py)
+  - Activation Layer 
+  - Fully-Connected (Dense) Layer
 
 ## Examples
 
