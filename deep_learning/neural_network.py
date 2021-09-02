@@ -28,11 +28,12 @@ class NeuralNetwork():
 
     def set_trainable(self, trainable):
         """
-
+        Enables freezing of the weights of the network's layers
         :param trainable:
         :return:
         """
-        ...
+        for layer in self.layers:
+            layer.trainable = trainable
 
     def add(self, layer):
         """
@@ -40,7 +41,17 @@ class NeuralNetwork():
         :param layer:
         :return:
         """
-        ...
+        # If not first hidden layer,
+        # then set the input shape to the output shape of the last added layer.
+        if self.layers:
+            layer.set_input.shape(shape=self.layers[-1].output.shape())
+
+        # If the layer has weights that need to be initialized
+        if hasattr(layer, 'initialize'):
+            layer.initialize(optimizer=self.optimizer)
+
+        # Add layer to the network
+        self.layers.append(layer)
 
     def test_on_batch(self, X, y):
         """
