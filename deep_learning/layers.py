@@ -125,6 +125,37 @@ class Dense(Layer):
         return (self.n_units,)
 
 
+class Dropout(Layer):
+    """
+    A layer that randomly sets a fraction p of the output units of the previous layer to zero
+    """
+    def __init__(self, p=0.2):
+        """
+
+        :param p: float
+            Probability that unit x is set to zero.
+        """
+        self.p = p
+        self._mask = None
+        self.input_shape = None
+        self.n_units = None
+        self.pass_through = True
+        self.trainable = True
+
+    def forward_pass(self, X, training):
+        c = (1 - self.p)
+        if training:
+            self._mask = np.random.uniform(size=X.shape) > self.p
+            c = self._mask
+            return X * c
+
+    def backward_pass(self, accum_grad):
+        return accum_grad * self._mask
+
+    def output_shape(self):
+        return self.input_shape
+
+
 activation_functions = {
     'relu': ReLu,
     'sigmoid': Sigmoid,
@@ -142,6 +173,11 @@ class Activation(Layer):
     A layer that applies an activation to the input
     """
     def __init__(self, name):
+        """
+
+        :param name: string
+            Name of the activation function that will be used.
+        """
         self.activation_name = name
         self.activation_func = activation_functions[name]()
         self.trainable = True
