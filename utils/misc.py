@@ -21,6 +21,18 @@ class Plot():
         self.cmap = plt.get_cmap('viridis')
 
     def _transform(self, X, dim):
+        """
+        Dimensionality reduction via PCA two dim dimensions
+
+        :param X: ndarray of shape (n_features, n_samples)
+            Design matrix
+
+        :param dim: int
+            Number of principal components to do PCA
+
+        :return: ndarray of shape (n_samples, dim)
+            Dimensionality reduced design matrix
+        """
         covariance = calculate_covariance_matrix(X)
         eigenvalues, eigenvectors = np.linalg.eig(covariance)
         # Sort eigenvalues and eigenvector by largest eigenvalues
@@ -63,8 +75,25 @@ class Plot():
 
         plt.show()
 
-    # Plot the dataset X and the corresponding labels y in 2D using PCA.
     def plot_in_2d(self, X, y=None, title=None, accuracy=None, legend_labels=None):
+        """
+        Plot the dataset X and the corresponding labels y in 2D using PCA.
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Design matrix
+
+        :param y: ndarray of shape (n_samples, )
+            Target data matrix
+
+        :param title: string
+            Name of algorithm to be used
+
+        :param accuracy: float
+            Prediction accuracy
+
+        :param legend_labels:
+        :return:
+        """
         X_transformed = self._transform(X, dim=2)
         x1 = X_transformed[:, 0]
         x2 = X_transformed[:, 1]
@@ -100,8 +129,18 @@ class Plot():
 
         plt.show()
 
-    # Plot the dataset X and the corresponding labels y in 3D using PCA.
     def plot_in_3d(self, X, y=None):
+        """
+        Plot the dataset X and the corresponding labels y in 3D using PCA.
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Design matrix
+
+        :param y: ndarray of shape (n_samples, )
+            Target data matrix
+
+        :return:
+        """
         X_transformed = self._transform(X, dim=3)
         x1 = X_transformed[:, 0]
         x2 = X_transformed[:, 1]
