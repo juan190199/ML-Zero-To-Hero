@@ -14,6 +14,14 @@ def calculate_variance(X):
     return variance
 
 
+def calculate_std_dev(X):
+    """
+    Calculate the standard deviations of the features in dataset X
+    """
+    std_dev = np.sqrt(calculate_variance(X))
+    return std_dev
+
+
 def euclidean_distance(x1, x2):
     """
     :param x1: ndarray of shape (n_samples1, n_features)
@@ -56,14 +64,28 @@ def calculate_covariance_matrix(X, Y=None):
     return np.array(covariance_matrix, dtype=float)
 
 
+def calculate_correlation_matrix(X, Y=None):
+    """
+    Calculate the correlation matrix for the dataset X
+    """
+    if Y is None:
+        Y = X
+    n_samples = np.shape(X)[0]
+    covariance = (1 / n_samples) * (X - X.mean(0)).T.dot(Y - Y.mean(0))
+    std_dev_X = np.expand_dims(calculate_std_dev(X), 1)
+    std_dev_y = np.expand_dims(calculate_std_dev(Y), 1)
+    correlation_matrix = np.divide(covariance, std_dev_X.dot(std_dev_y.T))
+
+    return np.array(correlation_matrix, dtype=float)
+
+
 def logsumexp(arr, axis=0):
     """
     Computes the sum of arr assuming arr is in the log domain.
     Returns log(sum(exp(arr))) while minimizing the possibility of over/underflow.
     """
     arr = np.rollaxis(arr, axis)
-    # Use the max to normalize, as with the log this is what accumulates
-    # the less errors
+    # Use the max to normalize, as with the log this is what accumulates the less errors
     vmax = arr.max(axis=0)
     out = np.log(np.sum(np.exp(arr - vmax), axis=0))
     out += vmax
