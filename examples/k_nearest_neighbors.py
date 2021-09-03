@@ -6,7 +6,8 @@ from sklearn import datasets
 from supervised_learning.k_nearest_neighbors import KNN
 
 from utils.data_manipulation import train_test_split, normalize
-from utils.data_operation import accuracy_score, euclidean_distance
+from utils.data_operation import accuracy_score
+from utils.misc import Plot
 
 
 def main():
@@ -22,6 +23,9 @@ def main():
     accuracy = accuracy_score(y_test, y_pred)
 
     print("Accuracy: ", accuracy)
+
+    # Reduce dimensions to 2d using pca and plot the results
+    Plot().plot_in_2d(X_test, y_pred, title="K Nearest Neighbors", accuracy=accuracy, legend_labels=data.target_names)
 
 
 if __name__ == "__main__":
