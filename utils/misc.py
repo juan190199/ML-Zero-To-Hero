@@ -10,11 +10,11 @@ from mpl_toolkits.mplot3d import Axes3D
 from utils.data_operation import calculate_covariance_matrix
 from utils.data_manipulation import standardize
 
-
 bar_widgets = [
     'Training: ', progressbar.Percentage(), ' ', progressbar.Bar(marker='-', left='[', right=']'),
     ' ', progressbar.ETA()
 ]
+
 
 class Plot():
     def __init__(self):
@@ -32,8 +32,8 @@ class Plot():
 
         return X_transformed
 
-
-    def plot_regression(self, lines, title, axis_labels=None, mse=None, scatter=None, legend={"type": "lines", "loc": "lower right"}):
+    def plot_regression(self, lines, title, axis_labels=None, mse=None, scatter=None,
+                        legend={"type": "lines", "loc": "lower right"}):
 
         if scatter:
             scatter_plots = scatter_labels = []
@@ -62,8 +62,6 @@ class Plot():
             plt.legend(scatter_plots, scatter_labels, loc=legend["loc"])
 
         plt.show()
-
-
 
     # Plot the dataset X and the corresponding labels y in 2D using PCA.
     def plot_in_2d(self, X, y=None, title=None, accuracy=None, legend_labels=None):
