@@ -49,5 +49,3 @@ The purpose of this project is to present the inner workings of the algorithms i
   - Activation Layer 
   - Fully-Connected (Dense) Layer
 
-## Examples
-
