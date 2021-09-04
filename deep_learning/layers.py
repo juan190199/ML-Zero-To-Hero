@@ -347,16 +347,22 @@ def image_to_column(images, filter_shape, stride, output_shape='same'):
     :param output_shape:
     :return:
     """
-    ...
+    filter_height, filter_width = filter_shape
+
+    pad_h, pad_w = determine_padding(filter_shape, output_shape)
+
+    # Add padding to the image
+    images_padded = np.pad(images, ((0, 0), (0, 0), pad_h, pad_w), mode='constant')
+
+    # Calculate the indices where the dot products are to be applied between weights and the image
+    k, i, j = get_im2col_indices(images.shape, filter_shape, (pad_h, pad_w), stride)
+
+    # Get content from image at those indices
+    cols = images_padded[:, k, i, j]
+    channels = images.shape[1]
+    # Reshape content into column shape
+    cols = cols.transpose(1, 2, 0).reshape(filter_height * filter_width * channels, -1)
+    return cols
 
 
-def column_to_image(cols, image_shape, filter_shape, stride, output_shape='same'):
-    """
 
-    :param cols:
-    :param image_shape:
-    :param filter_shape:
-    :param stride:
-    :param output_shape:
-    :return:
-    """
