@@ -365,4 +365,30 @@ def image_to_column(images, filter_shape, stride, output_shape='same'):
     return cols
 
 
+def column_to_image(cols, images_shape, filter_shape, stride, output_shape='same'):
+    """
 
+    :param cols:
+    :param image_shape:
+    :param filter_shape:
+    :param stride:
+    :param output_shape:
+    :return:
+    """
+    batch_size, channels, height, width = images_shape
+    pad_h, pad_w = determine_padding(filter_shape, output_shape)
+    height_padded = height + np.sum(pad_h)
+    width_padded = width + np.sum(pad_w)
+    images_padded = np.zeros((batch_size, channels, height_padded, width_padded))
+
+    # Calculate the indices where the dot products are applied between weights
+    # and the image
+    k, i, j = get_im2col_indices(images_shape, filter_shape, (pad_h, pad_w), stride)
+
+    cols = cols.reshape(channels * np.prod(filter_shape), -1, batch_size)
+    cols = cols.transpose(2, 0, 1)
+    # Add column content to the images at the indices
+    np.add.at(images_padded, (slice(None), k, i, j), cols)
+
+    # Return image without padding
+    return images_padded[:, :, pad_h[0]:height + pad_h[0], pad_w[0]:width + pad_w[0]]
