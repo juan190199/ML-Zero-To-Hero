@@ -247,6 +247,20 @@ class Conv2D(Layer):
     def parameters(self):
         return np.prod(self.w.shape) + np.prod(self.b.shape)
 
+    def forward_pass(self, X, training):
+        batch_size, channels, height, width = X.shape
+        self.layer_input = X
+        # Turn image shape into column shape (enables dot product between input and weights)
+        self.X_col = image_to_column(X, self.filter_shape, stride=self.stride, output_shape=self.padding)
+        # Turn weights into column shape
+        self.w_col = self.w.reshape((self.n_filters, -1))
+        # Calculate output
+        output = self.w_col.dot(self.X_col) + self.b
+        # Reshape into (n_filters, out_height, out_width, batch_size)
+        output = output.reshape(self.output_shape() + (batch_size,))
+        # Redistribute axises so that batch size comes first
+        return output.transpose(3, 0, 1, 2)
+
 
 
     def output_shape(self):
