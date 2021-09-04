@@ -129,6 +129,7 @@ class Dropout(Layer):
     """
     A layer that randomly sets a fraction p of the output units of the previous layer to zero
     """
+
     def __init__(self, p=0.2):
         """
 
@@ -172,6 +173,7 @@ class Activation(Layer):
     """
     A layer that applies an activation to the input
     """
+
     def __init__(self, name):
         """
 
@@ -194,3 +196,129 @@ class Activation(Layer):
 
     def output_shape(self):
         return self.input_shape
+
+
+class Conv2D(Layer):
+    """
+    A 2D Convolution layer
+    """
+
+    def __init__(self, n_filters, filter_shape, input_shape=None, padding='same', stride=1):
+        """
+
+        :param n_filters: int
+            Number of filters that will convolve the input matrix.
+            The number of channels of the output shape.
+
+        :param filter_shape: tuple
+            (filter_height, filter_width)
+
+        :param input_shape: tuple
+            Shape of the expected input of the layer (batch_size, channels, height, width)
+            Only needs to be specified for the first layer in the network
+
+        :param padding: string
+            Possible options are: 'same' or 'valid'.
+            'same' results in padding being added so that the output height and width
+            matches the input height and width.
+            For 'valid', no padding is added.
+
+        :param stride: int
+            The stride length of the filters during the convolution over the input
+        """
+        self.n_filters = n_filters
+        self.filter_shape = filter_shape
+        self.padding = padding
+        self.stride = stride
+        self.input_shape = input_shape
+        self.trainable = True
+
+    def initialize(self, optimizer):
+        # Initialize the weights
+        filter_height, filter_width = self.filter_shape
+        channels = self.input_shape[0]
+        limit = 1 / np.sqrt(np.prod(self.filter_shape))
+        self.w = np.random.uniform(-limit, limit, size=(self.n_filters, channels, filter_height, filter_width))
+        self.b = np.zeros((self.n_filters, 1))
+        # Weight optimizers
+        self.w_opt = copy.copy(optimizer)
+        self.b_opt = copy.copy(optimizer)
+
+    def parameters(self):
+        return np.prod(self.w.shape) + np.prod(self.b.shape)
+
+
+
+    def output_shape(self):
+        channels, height, width = self.input_shape
+        pad_h, pad_w = determine_padding(self.filter_shape, output_shape=self.padding)
+        output_height = (height + np.sum(pad_h) - self.filter_shape[0]) / self.stride + 1
+        output_width = (width + np.sum(pad_w) - self.filter_shape[1]) / self.stride + 1
+        return self.n_filters, int(output_height), int(output_width)
+
+
+########################################################################################################################
+########################################################################################################################
+
+def determine_padding(filter_shape, output_shape='same'):
+    """
+    Method which calculates the padding based on the specified output shape and the shape of the filters
+
+    :param filter_shape:
+    :param output_shape:
+    :return:
+    """
+    # No padding
+    if output_shape == 'valid':
+        return (0, 0), (0, 0)
+    # Pad so that the output is the same as input shape (given that stride=1)
+    elif output_shape == 'same':
+        filter_height, filter_width = filter_shape
+
+        # Derived from:
+        # output_height = (height + pad_h - filter_height) / stride + 1
+        # In this case, output_height = height and stride = 1.
+        # This gives the expression for the padding below
+        pad_h1 = int(math.floor((filter_height - 1) / 2))
+        pad_h2 = int(math.ceil((filter_height - 1) / 2))
+        pad_w1 = int(math.floor((filter_width - 1) / 2))
+        pad_w2 = int(math.ceil((filter_width - 1) / 2))
+
+        return (pad_h1, pad_h2), (pad_w1, pad_w2)
+
+
+def get_im2col_indices(image_shape, filter_shape, padding, stride=1):
+    """
+
+    :param image_shape:
+    :param filter_shape:
+    :param padding:
+    :param stride:
+    :return:
+    """
+    # First figure out what the size of the output should be
+    ...
+
+
+def image_to_column(images, filter_shape, stride, output_shape='same'):
+    """
+
+    :param images:
+    :param filter_shape:
+    :param stride:
+    :param output_shape:
+    :return:
+    """
+    ...
+
+
+def column_to_image(cols, image_shape, filter_shape, stride, output_shape='same'):
+    """
+
+    :param cols:
+    :param image_shape:
+    :param filter_shape:
+    :param stride:
+    :param output_shape:
+    :return:
+    """
