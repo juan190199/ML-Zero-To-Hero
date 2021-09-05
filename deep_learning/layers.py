@@ -258,7 +258,7 @@ class Conv2D(Layer):
         output = self.w_col.dot(self.X_col) + self.b
         # Reshape into (n_filters, out_height, out_width, batch_size)
         output = output.reshape(self.output_shape() + (batch_size,))
-        # Redistribute axises so that batch size comes first
+        # Redistribute axes so that batch size comes first
         return output.transpose(3, 0, 1, 2)
 
     def backward_pass(self, accum_grad):
@@ -417,11 +417,13 @@ def get_im2col_indices(images_shape, filter_shape, padding, stride=1):
     j0 = np.tile(np.arange(filter_width), filter_height * channels)
     j1 = stride * np.tile(np.arange(out_width), out_height)
 
-    # Row coordinate center of patch as center of patch slices through the image
+    # Matrix of shape (size of filter, row index center of patch)
+    # Size of filter is the multiplication of the filter dimensions
     i = i0.reshape(-1, 1) + i1.reshape(1, -1)
-    # Column coordinate center of patch as center of patch slices through the image
+    # Matrix of shape (size of filter, column index center of patch)
+    # Size of filter is the multiplication of the filter dimensions
     j = j0.reshape(-1, 1) + j1.reshape(1, -1)
-
+    # Channel indices
     k = np.repeat(np.arange(channels), filter_height * filter_width).reshape(-1, 1)
 
     return (k, i, j)
@@ -447,6 +449,10 @@ def image_to_column(images, filter_shape, stride, output_shape='same'):
     k, i, j = get_im2col_indices(images.shape, filter_shape, (pad_h, pad_w), stride)
 
     # Get content from image at those indices
+    # For all padded images, get for all channels the values of the 9 spaces
+    # indexed by the coordinates (i, j) of the center of the filter.
+    # images_padded[0, 0, i, j] denotes for the image 0 and channel 0,
+    # all local values (in columns) of the padded image through all transitions
     cols = images_padded[:, k, i, j]
     channels = images.shape[1]
     # Reshape content into column shape
