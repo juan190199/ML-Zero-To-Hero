@@ -416,7 +416,10 @@ def get_im2col_indices(images_shape, filter_shape, padding, stride=1):
     i1 = stride * np.repeat(np.arange(out_height), out_width)
     j0 = np.tile(np.arange(filter_width), filter_height * channels)
     j1 = stride * np.tile(np.arange(out_width), out_height)
+
+    # Row coordinate center of patch as center of patch slices through the image
     i = i0.reshape(-1, 1) + i1.reshape(1, -1)
+    # Column coordinate center of patch as center of patch slices through the image
     j = j0.reshape(-1, 1) + j1.reshape(1, -1)
 
     k = np.repeat(np.arange(channels), filter_height * filter_width).reshape(-1, 1)
