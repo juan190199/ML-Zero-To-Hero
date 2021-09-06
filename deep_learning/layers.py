@@ -395,13 +395,23 @@ def determine_padding(filter_shape, output_shape='same'):
         return (pad_h1, pad_h2), (pad_w1, pad_w2)
 
 
+# Reference: CS231n Stanford university
 def get_im2col_indices(images_shape, filter_shape, padding, stride=1):
     """
+    Calculate indices where the dot products are to be applied between weights and the image
 
-    :param images_shape:
-    :param filter_shape:
-    :param padding:
-    :param stride:
+    :param images_shape: Tuple
+        (batch_size, channels, height, width)
+
+    :param filter_shape: Tuple
+        (height, width)
+
+    :param padding: Tuple
+        (pad_h1, pad_h2), (pad_w1, pad_w2)
+
+    :param stride: int
+        The stride length of the filters during the convolution over the input
+
     :return:
     """
     # First figure out what the size of the output should be
@@ -429,13 +439,23 @@ def get_im2col_indices(images_shape, filter_shape, padding, stride=1):
     return (k, i, j)
 
 
+# Reference: CS231n Stanford university
 def image_to_column(images, filter_shape, stride, output_shape='same'):
     """
+    Turns the image shaped input to column shape. Used during forward pass
 
-    :param images:
-    :param filter_shape:
-    :param stride:
-    :param output_shape:
+    :param images: ndarray of shape (batch_size, channels, height, width)
+        Data to be processed
+
+    :param filter_shape: ndarray of shape (height, width)
+        Filter to apply convolution to given image
+
+    :param stride: int
+        The stride length of the filters during the convolution over the input
+
+    :param output_shape: ndarray of shape (n_filters, channels, height, width)
+        Output after convolution
+
     :return:
     """
     filter_height, filter_width = filter_shape
@@ -460,8 +480,10 @@ def image_to_column(images, filter_shape, stride, output_shape='same'):
     return cols
 
 
+# Reference: CS231n Stanford university
 def column_to_image(cols, images_shape, filter_shape, stride, output_shape='same'):
     """
+    Turns the column shaped input to image shape. Used during the backward pass
 
     :param cols:
     :param image_shape:
