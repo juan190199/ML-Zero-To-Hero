@@ -313,6 +313,12 @@ class PoolingLayer(Layer):
         self.trainable = True
 
     def forward_pass(self, X, training=True):
+        """
+
+        :param X:
+        :param training:
+        :return:
+        """
         self.layer_input = X
 
         batch_size, channels, height, width = X.shape
@@ -358,7 +364,17 @@ class PoolingLayer(Layer):
 
 
 class MaxPooling2D(PoolingLayer):
-    ...
+    def _pool_forward(self, X_col):
+        arg_max = np.argmax(X_col, axis=0).flatten()
+        output = X_col[arg_max, range(arg_max.size)]
+        self.cache = arg_max
+        return output
+
+    def _pool_backward(self, accum_grad):
+        accum_grad_col = np.zeros((np.prod(self.pool_shape), accum_grad.size))
+        arg_max = self.cache
+        accum_grad_col[arg_max, range(accum_grad.size)] = accum_grad
+        return accum_grad_col
 
 
 class AveragePooling2D(PoolingLayer):
