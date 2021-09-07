@@ -46,6 +46,12 @@ The purpose of this project is to present the inner workings of the algorithms i
 ### Deep Learning
 - [Neural Network](deep_learning/neural_network.py)
 - [Layers](deep_learning/layers.py)
-  - Activation Layer 
+  - Activation Layer
+  - Average Pooling Layer
+  - Constant Padding Layer
+  - Convolutional Layer
+  - Dropout Layer
   - Fully-Connected (Dense) Layer
+  - Max Pooling Layer
+  - Zero Padding Layer
 
