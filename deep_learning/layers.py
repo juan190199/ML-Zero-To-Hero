@@ -429,6 +429,7 @@ class ZeroPadding2D(ConstantPadding2D):
     Adds rows and columns of zero values to the input.
     Expects the input to be of shape (batch_size, channels, height, width)
     """
+
     def __init__(self, padding):
         self.padding = padding
         if isinstance(padding[0], int):
@@ -436,6 +437,32 @@ class ZeroPadding2D(ConstantPadding2D):
         if isinstance(padding[1], int):
             self.padding = (padding[0], (padding[1], padding[1]))
         self.padding_value = 0
+
+
+class RNN(Layer):
+    """
+    A Vanilla Fully-Connected Recurrent Neural Network layer
+
+    """
+
+    def __init__(self):
+        ...
+
+    def initialize(self):
+        ...
+
+    def parameters(self):
+        ...
+
+    def forward_pass(self, X, training):
+        ...
+
+    def backward_pass(self, accum_grad):
+        ...
+
+    def output_shape(self):
+        ...
+
 
 ########################################################################################################################
 ########################################################################################################################
