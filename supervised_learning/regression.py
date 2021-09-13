@@ -8,6 +8,7 @@ class L1_Regularization():
     """
     Regularization for Lasso Regression
     """
+
     def __init__(self, alpha):
         self.alpha = alpha
 
@@ -22,6 +23,7 @@ class L2_Regularization():
     """
     Regularization for Lasso Regression
     """
+
     def __init__(self, alpha):
         self.alpha = alpha
 
@@ -54,6 +56,7 @@ class Regression(object):
     variables X.
 
     """
+
     def __init__(self, n_iterations, learning_rate):
         """
 
@@ -79,7 +82,7 @@ class Regression(object):
         """
         limit = 1 / math.sqrt(n_features)
         # self.w = np.random.normal(loc=0, scale=scale,  size=(n_features, ))
-        self.w = np.random.uniform(-limit, limit, size=(n_features, ))
+        self.w = np.random.uniform(-limit, limit, size=(n_features,))
 
     def fit(self, X, y):
         """
@@ -117,7 +120,7 @@ class Regression(object):
         :return: ndarray of shape (n_samples, )
             Predicted values
         """
-        #Insert constant ones for bias weights
+        # Insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
         y_pred = X.dot(self.w)
         return y_pred
@@ -127,6 +130,7 @@ class LinearRegression(Regression):
     """
     Linear model.
     """
+
     def __init__(self, n_iterations=100, learning_rate=0.001, gradient_descent=True):
         """
 
@@ -176,6 +180,7 @@ class LassoRegression(Regression):
     and regularization. Model that tries to balance the fit of the model with respect to the training
     data and the complexity of the model. A large regularization factor with decreases the variance of the model.
     """
+
     def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01):
         """
 
@@ -227,6 +232,7 @@ class PolynomialRegression(Regression):
     Performs a non-linear transformation of the data before fitting the model
     and doing predictions which allows for doing non-linear regression.
     """
+
     def __init__(self, degree, n_iterations=3000, learning_rate=0.001):
         """
 
@@ -278,6 +284,7 @@ class RidgeRegression(Regression):
     Model that tries to balance the fit of the model with respect to the training data and the complexity
     of the model. A large regularization factor with decreases the variance of the model.
     """
+
     def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001):
         """
 
@@ -299,6 +306,7 @@ class PolynomialRidgeRegression(Regression):
     Similar to regular ridge regression except that the data is transformed to allow
     for polynomial regression.
     """
+
     def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01, gradient_descent=True):
         """
 
@@ -354,6 +362,7 @@ class ElasticNet(Regression):
     Regression where a combination of l1 and l2 regularization are used. The
     ratio of their contributions are set with the 'l1_ratio' parameter.
     """
+
     def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01):
         """
 
