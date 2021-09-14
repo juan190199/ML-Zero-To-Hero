@@ -137,6 +137,31 @@ def train_test_split(X, y, test_size=0.5, shuffle=True, seed=None):
     return X_train, X_test, y_train, y_test
 
 
+def to_categorical(x, n_col=None):
+    """
+    One-hot encoding of nominal values
+
+    :param x:
+    :param n_col:
+    :return:
+    """
+    if not n_col:
+        n_col = np.amax(x) + 1
+    one_hot = np.zeros((x.shape[0], n_col))
+    one_hot[np.arange(x.shape[0]), x] = 1
+    return one_hot
+
+
+def to_nominal(x):
+    """
+    Conversion from one-hot encoding to nominal
+
+    :param x:
+    :return:
+    """
+    return np.argmax(x, axis=1)
+
+
 def make_diagonal(x):
     """
     Converts a vector into a diagonal matrix
