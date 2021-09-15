@@ -7,7 +7,7 @@ from deep_learning.activation_functions import Sigmoid
 
 class LogisticRegression():
     """
-
+    Logistic Regression classifier
     """
 
     def __init__(self, learning_rate=.1, gradient_descent=True):
