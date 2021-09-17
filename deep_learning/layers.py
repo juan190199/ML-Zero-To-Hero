@@ -295,6 +295,38 @@ class Conv2D(Layer):
         return self.n_filters, int(output_height), int(output_width)
 
 
+class BatchNormalization(Layer):
+    """
+    Batch normalization
+    """
+    def __init__(self, momentum=0.99):
+        self.momentum = momentum
+        self.trainable = True
+        self.eps = 0.01
+        self.running_mean = None
+        self.running_var = None
+
+    def initilaize(self, optimizer):
+        # Initialize the parameters
+        self.gamma = np.ones(self.input_shape)
+        self.beta = np.zeros(self.input_shape)
+        # Parameter optimizers
+        self.gamma_opt = copy.copy(optimizer)
+        self.beta_opt = copy.copy(optimizer)
+
+    def parameters(self):
+        return np.prod(self.gamma.shape) + np.prod(self.beta.shape)
+
+    def forward_pass(self, X, training=True):
+        ...
+
+    def backward_pass(self, accum_grad):
+        ...
+
+    def output_shape(self):
+        return self.input_shape
+
+
 class PoolingLayer(Layer):
     """
     Parent class of MaxPooling2D and AveragePooling2D
