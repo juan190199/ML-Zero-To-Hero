@@ -88,8 +88,8 @@ class Dense(Layer):
 
     def initialize(self, optimizer):
         # Initialize the weights
-        limit = 1 / math.sqrt(self.input.shape[0])
-        self.w = np.random.uniform(-limit, limit, (self.input.shape[0], self.n_units))
+        limit = 1 / math.sqrt(self.input_shape[0])
+        self.w = np.random.uniform(-limit, limit, (self.input_shape[0], self.n_units))
         self.b = np.zeros((1, self.n_units))
         # Weight optimizers
         self.w_opt = copy.copy(optimizer)
