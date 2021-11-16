@@ -123,7 +123,7 @@ class NeuralNetwork():
         for layer in self.layers:
             layer_output = layer.forward_pass(layer_output, training)
 
-        # return layer_output
+        return layer_output
 
     def _backward_pass(self, loss_grad):
         """
