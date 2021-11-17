@@ -104,13 +104,13 @@ class NeuralNetwork():
                 loss, _ = self.train_on_batch(X_batch, y_batch)
                 batch_error.append(loss)
 
-        #     self.errors["training"].append(np.mean(batch_error))
-        #
-        #     if self.val_set is not None:
-        #         val_loss, _ = self.test_on_batch(self.val_set["X"], self.val_set["y"])
-        #         self.errors["validation"].append(val_loss)
-        #
-        # return self.errors["training"], self.errors["validation"]
+            self.errors["training"].append(np.mean(batch_error))
+
+            if self.val_set is not None:
+                val_loss, _ = self.test_on_batch(self.val_set["X"], self.val_set["y"])
+                self.errors["validation"].append(val_loss)
+
+        return self.errors["training"], self.errors["validation"]
 
     def _forward_pass(self, X, training=True):
         """
