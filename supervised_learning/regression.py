@@ -213,6 +213,16 @@ class LocallyWeightedLinearRegression(Regression):
         return y_pred
 
 
+class WeightedLinearRegression(Regression):
+    # ToDo
+    ...
+
+
+class TotalLeastSquares(Regression):
+    # ToDo
+    ...
+
+
 class LassoRegression(Regression):
     """
     Linear regression model with a regularization factor which does both variable selection
