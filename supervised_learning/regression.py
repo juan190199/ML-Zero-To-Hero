@@ -285,7 +285,7 @@ class RidgeRegression(Regression):
     of the model. A large regularization factor with decreases the variance of the model.
     """
 
-    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001):
+    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001, gradient_descent=True):
         """
 
         :param reg_factor: float
@@ -297,8 +297,32 @@ class RidgeRegression(Regression):
         :param learning_rate: float
             The step length that will be used when updating the weights.
         """
-        self.regularization = L2_Regularization(alpha=reg_factor)
+        self.gradient_descent = gradient_descent
+        self.reg_factor = reg_factor
+        self.regularization = L2_Regularization(alpha=self.reg_factor)
         super(RidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y):
+        """
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target values
+
+        :return: self
+        """
+        # If not gradient descent => Normal equations
+        if not self.gradient_descent:
+            # Insert constant ones for bias weights
+            X = np.insert(X, 0, 1, axis=1)
+            U, S, V = np.linalg.svd(X.T.dot(X) + self.regularization * np.identity(X.shape[0]))
+            S = np.diag(S)
+            X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
+            self.w = X_sq_reg_inv.dot(X.T).dot(y)
+        else:
+            super(RidgeRegression, self).fit(X, y)
 
 
 class PolynomialRidgeRegression(Regression):
