@@ -2,6 +2,7 @@ import math
 import numpy as np
 
 from utils.data_manipulation import (normalize, polynomial_features)
+from utils.data_operation import rescale_data
 
 
 class L1_Regularization():
@@ -170,8 +171,46 @@ class LinearRegression(Regression):
             S = np.diag(S)
             X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
             self.w = X_sq_reg_inv.dot(X.T).dot(y)
+
         else:
             super(LinearRegression, self).fit(X, y)
+
+
+class LocallyWeightedLinearRegression(Regression):
+    """
+
+    """
+    def __init__(self, tau):
+        """
+
+        :param tau:
+        """
+        self.tau = tau
+
+    def fit(self, X, y):
+        """
+
+        :param X:
+        :param y:
+        :return:
+        """
+        self.X = X
+        self.y = y
+
+    def predict(self, X):
+        """
+
+        :param X:
+        :return:
+        """
+        sq_norm = np.linalg.norm(self.X[:, None, :] - X[None, :, :], axis=-1) ** 2
+        weights = np.exp(-sq_norm / (2 * self.tau ** 2))
+        self.w = np.linalg.inv(self.X.T.dot(weights).dot(self.X)).dot(self.X.T).dot(weights).dot(self.y).T
+
+        # Insert constant ones for bias weights
+        X = np.insert(X, 0, 1, axis=1)
+        y_pred = X.dot(self.w)
+        return y_pred
 
 
 class LassoRegression(Regression):
