@@ -1,6 +1,9 @@
 import math
 import numpy as np
 
+from scipy import sparse
+from sklearn.utils.extmath import safe_sparse_dot
+
 
 def mean_squared_error(y_true, y_pred):
     """
@@ -102,3 +105,23 @@ def logsumexp(arr, axis=0):
     out = np.log(np.sum(np.exp(arr - vmax), axis=0))
     out += vmax
     return out
+
+
+def rescale_data(X, y, sample_weight):
+    """
+    Rescale data sample-wise by square root of sample weight
+    :param X:
+    :param y:
+    :param sample_weight:
+    :return:
+    """
+    n_samples = X.shape[0]
+    sample_weight = np.asarray(sample_weight)
+    if sample_weight.ndim == 0:
+        sample_weight = np.full(n_samples, sample_weight, dtype=sample_weight.dtype)
+    sample_weight = np.sqrt(sample_weight)
+    sw_matrix = sparse.dia_matrix((sample_weight, 0), shape=(n_samples, n_samples))
+    X = safe_sparse_dot(sw_matrix, X)
+    y = safe_sparse_dot(sw_matrix, y)
+
+    return X, y
