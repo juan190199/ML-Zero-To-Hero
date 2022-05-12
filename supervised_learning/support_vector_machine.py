@@ -109,4 +109,20 @@ class SupportVectorMachine(object):
             self.intercept -= self.lagr_multipliers[i] * self.support_vector_labels[i] * \
                               self.kernel(self.support_vectors[i], self.support_vectors[0])
 
+    def predict(self, X):
+        """
 
+        :param X:
+        :return:
+        """
+        y_pred = []
+        for sample in X:
+            prediction = 0
+            # Determine the label of the sample by the support vectors
+            for i in range(len(self.lagr_multipliers)):
+                prediction += self.lagr_multipliers[i] * self.support_vector_labels[i] * \
+                              self.kernel(self.support_vectors[i], sample)
+            prediction += self.intercept
+            y_pred.append(np.sign(prediction))
+
+        return np.array(y_pred)
