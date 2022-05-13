@@ -11,7 +11,7 @@ cvxopt.solvers.options['show_progress'] = False
 
 class SupportVectorMachine(object):
     """
-    Support Vector Machine classifier
+    Support Vector Machine classifier (using l1 regularization)
     Uses cvxopt to solve the quadratic optimization problem
     """
 
