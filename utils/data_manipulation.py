@@ -43,6 +43,15 @@ def polynomial_features(X, degree):
         flat_combs = [item for sublist in combs for item in sublist]
         return flat_combs
 
+    combinations = index_combinations()
+    n_output_features = len(combinations)
+    X_new = np.empty((n_samples, n_output_features))
+
+    for i, index_combs in enumerate(combinations):
+        X_new[:, i] = np.prod(X[:, index_combs], axis=1)
+
+    return X_new
+
 
 def shuffle_data(X, y, seed=None):
     """
@@ -92,9 +101,9 @@ def normalize(X, axis=-1, order=2):
     :return: ndarray of shape (n_samples, n_features)
         Normalized dataset
     """
-    L2 = np.atleast_1d(np.linalg.norm(X, order, axis))
-    L2[L2 == 0] = 1
-    return X / np.expand_dims(L2, axis)
+    l2 = np.atleast_1d(np.linalg.norm(X, order, axis))
+    l2[l2 == 0] = 1
+    return X / np.expand_dims(l2, axis)
 
 
 def standardize(X):
