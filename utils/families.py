@@ -36,7 +36,32 @@ class ExponentialFamilyMixin:
 
 
 class Gaussian(ExponentialFamily, ExponentialFamilyMixin):
-    ...
+    """
+    A Gaussian exponential family, used to fit a classical linear model.
+    The conditional distribution of y|X is modeled as a Gaussian distribution
+    """
+    has_dispersion = True
+
+    def inv_link(self, nu):
+        return nu
+
+    def d_inv_link(self, nu, mu):
+        return np.ones(shape=nu.shape)
+
+    def variance(self, mu):
+        return np.ones(shape=mu.shape)
+
+    def deviance(self, y, mu):
+        return np.sum((y - mu) ** 2)
+
+    def sample(self, mus, dispersion):
+        return np.random.normal(mus, np.sqrt(dispersion))
+
+    def initial_working_response(self, y):
+        return y
+
+    def initial_working_weights(self, y):
+        return (1 / len(y)) * np.ones(len(y))
 
 
 class Bernoulli(ExponentialFamily, ExponentialFamilyMixin):
