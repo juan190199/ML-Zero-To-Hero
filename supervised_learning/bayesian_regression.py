@@ -91,3 +91,21 @@ class BayesianRegression(object):
         u_eti = 50 + self.cred_int / 2
         self.eti = np.array([[np.percentile(beta_draws[:, i], q=l_eti), np.percentile(beta_draws[:, i], q=u_eti)] \
                              for i in range(n_features)])
+
+    def predict(self, X, eti=False):
+
+        # If polynomial transformation
+        if self.poly_degree:
+            X = polynomial_features(X, degree=self.poly_degree)
+
+        y_pred = X.dot(self.w)
+        # If the lower and upper boundaries for the 95%
+        # equal tail interval should be returned
+        if eti:
+            lower_w = self.eti[:, 0]
+            upper_w = self.eti[:, 1]
+            y_lower_pred = X.dot(lower_w)
+            y_upper_pred = X.dot(upper_w)
+            return y_pred, y_lower_pred, y_upper_pred
+
+        return y_pred
