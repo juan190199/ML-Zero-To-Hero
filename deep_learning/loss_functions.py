@@ -11,7 +11,7 @@ class Loss(object):
         return NotImplementedError()
 
     def acc(self, y, y_pred):
-        return NotImplementedError()
+        return 0
 
 
 class SquareLoss(Loss):
