@@ -63,6 +63,52 @@ class Gaussian(ContinuousDistribution):
         return cls(mean, std)
 
 
+class DiscreteDistribution(Distribution):
+    def probability(self, value):
+        raise NotImplementedError("Subclasses should override.")
+
+
+class Multinomial(DiscreteDistribution):
+    def __init__(self, categoryCounts, smoothingFactor=1.0):
+        self.categoryCounts = categoryCounts
+        self.numPoints = float(sum(categoryCounts.values()))
+        self.numCategories = float(len(categoryCounts))
+        self.smoothingFactor = float(smoothingFactor)
+
+    def probability(self, value):
+        if not value in self.categoryCounts:
+            return 0.0
+        numerator = float(self.categoryCounts[value]) + self.smoothingFactor
+        denominator = self.numPoints + self.numCategories * self.smoothingFactor
+        return numerator / denominator
+
+    def __str__(self):
+        return "Discrete Multinomial distribution: buckets = %s" % self.categoryCounts
+
+    @classmethod
+    def mleEstimate(cls, points):
+        categoryCounts = collections.Counter()
+        for point in points:
+            categoryCounts[point] += 1
+        return cls(categoryCounts)
+
+
+class Binary(Multinomial):
+    def __init__(self, trueCount, falseCount, smoothingFactor=1.0):
+        categoryCounts = {True: trueCount, False: falseCount}
+        Multinomial.__init__(self, categoryCounts, smoothingFactor)
+
+    def __str__(self):
+        return "Discrete Binary distribution: true count = %s, false count = %s" % (
+        self.categoryCounts[True], self.categoryCounts[False])
+
+    @classmethod
+    def mleEstimate(cls, points, smoothingFactor=1.0):
+        trueCount = 0
+        for point in points:
+            if point: trueCount += 1
+        falseCount = len(points) - trueCount
+        return cls(trueCount, falseCount, smoothingFactor)
 
 
 ##########   Errors   ##########
