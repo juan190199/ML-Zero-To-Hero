@@ -78,7 +78,7 @@ class NaiveBayes():
             Sample to be classified
 
         :return: int
-            Class with largest posterior for the given sample
+            Class with the largest posterior for the given sample
         """
         posteriors = []
         # Go through list of classes
