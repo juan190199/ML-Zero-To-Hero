@@ -30,15 +30,14 @@ class Uniform(ContinuousDistribution):
         if alpha == beta: raise ParametrizationError("Alpha and beta cannot be equal")
         self.alpha = alpha
         self.beta = beta
-        self.range = beta - alpha
+        self.range = self.beta - self.alpha
 
     def pdf(self, value):
         if value < self.alpha or value > self.beta: return 0.0
         else: return 1.0 / self.range
 
     def cdf(self, value):
-        if value < self.alpha: return 0.0
-        elif value > self.beta: return 0.0
+        if value < self.alpha or value > self.beta: return 0.0
         else: return (value - self.alpha) / self.range
 
     def __str__(self, value):
@@ -92,6 +91,25 @@ class DiscreteDistribution(Distribution):
         raise NotImplementedError("Subclasses should override.")
 
 
+class DiscreteUniform(DiscreteDistribution):
+    def __init__(self, alpha, beta):
+        if alpha == beta: raise Exception("Alpha and beta cannot be equal")
+        self.alpha = alpha
+        self.beta = beta
+        self.prob = 1.0 / (self.beta - self.alpha)
+
+    def probability(self, value):
+        if value < self.alpha or value > self.beta: return 0.0
+        else: return self.prob
+
+    def __str__(self):
+        return "Discrete Uniform distribution: alpha = %s, beta = %s" % (self.alpha, self.beta)
+
+    @classmethod
+    def ml_estimator(cls, points):
+        return cls(min(points), max(points))
+
+
 class Multinomial(DiscreteDistribution):
     def __init__(self, category_counts, smoothing_factor=1.0):
         self.category_counts = category_counts
@@ -136,7 +154,7 @@ class Binary(Multinomial):
         return cls(true_count, false_count, smoothing_factor)
 
 
-##########   Errors   ##########
+##### Errors #####
 
 class EstimationError(Exception):
     def __init__(self, value):
