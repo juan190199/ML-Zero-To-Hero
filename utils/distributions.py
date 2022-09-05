@@ -9,11 +9,11 @@ class Distribution(object):
         raise NotImplementedError("Subclasses should override.")
 
     @classmethod
-    def mleEstimate(cls, points):
+    def ml_estimator(cls, points):
         raise NotImplementedError("Subclasses should override.")
 
     @classmethod
-    def momEstimate(cls, points):
+    def mom_estimator(cls, points):
         raise NotImplementedError("Subclasses should override.")
 
 
@@ -23,6 +23,30 @@ class ContinuousDistribution(Distribution):
 
     def cdf(self, value):
         raise NotImplementedError("Subclasses should override.")
+
+
+class Uniform(ContinuousDistribution):
+    def __init__(self, alpha, beta):
+        if alpha == beta: raise ParametrizationError("Alpha and beta cannot be equal")
+        self.alpha = alpha
+        self.beta = beta
+        self.range = beta - alpha
+
+    def pdf(self, value):
+        if value < self.alpha or value > self.beta: return 0.0
+        else: return 1.0 / self.range
+
+    def cdf(self, value):
+        if value < self.alpha: return 0.0
+        elif value > self.beta: return 0.0
+        else: return (value - self.alpha) / self.range
+
+    def __str__(self, value):
+        return "Continuous Uniform distribution: alpha = %s, beta = %s" % (self.alpha, self.beta)
+
+    @classmethod
+    def ml_estimator(cls, points):
+        return cls(min(points), max(points))
 
 
 class Gaussian(ContinuousDistribution):
@@ -47,17 +71,17 @@ class Gaussian(ContinuousDistribution):
         return "Continuous Gaussian (Normal) distribution: mean = %s, standard deviation = %s" % (self.mean, self.std)
 
     @classmethod
-    def mleEstimate(cls, points):
-        numPoints = float(len(points))
-        if numPoints <= 1:
+    def ml_estimator(cls, points):
+        n_points = float(len(points))
+        if n_points <= 1:
             raise EstimationError("Must provide at least 2 training points")
 
-        mean = sum(points) / numPoints
+        mean = sum(points) / n_points
 
         variance = 0.0
         for point in points:
             variance += math.pow(float(point) - mean, 2.0)
-        variance /= (numPoints - 1.0)
+        variance /= (n_points - 1.0)
         std = math.sqrt(variance)
 
         return cls(mean, std)
@@ -69,46 +93,47 @@ class DiscreteDistribution(Distribution):
 
 
 class Multinomial(DiscreteDistribution):
-    def __init__(self, categoryCounts, smoothingFactor=1.0):
-        self.categoryCounts = categoryCounts
-        self.numPoints = float(sum(categoryCounts.values()))
-        self.numCategories = float(len(categoryCounts))
-        self.smoothingFactor = float(smoothingFactor)
+    def __init__(self, category_counts, smoothing_factor=1.0):
+        self.category_counts = category_counts
+        self.n_points = float(sum(category_counts.values()))
+        self.num_categories = float(len(category_counts))
+        self.smoothing_factor = float(smoothing_factor)
 
     def probability(self, value):
-        if not value in self.categoryCounts:
+        if not value in self.category_counts:
             return 0.0
-        numerator = float(self.categoryCounts[value]) + self.smoothingFactor
-        denominator = self.numPoints + self.numCategories * self.smoothingFactor
+        numerator = float(self.category_counts[value]) + self.smoothing_factor
+        denominator = self.n_points + self.num_categories * self.smoothing_factor
         return numerator / denominator
 
     def __str__(self):
-        return "Discrete Multinomial distribution: buckets = %s" % self.categoryCounts
+        return "Discrete Multinomial distribution: buckets = %s" % self.category_counts
 
     @classmethod
-    def mleEstimate(cls, points):
-        categoryCounts = collections.Counter()
+    def ml_estimator(cls, points):
+        category_counts = collections.Counter()
         for point in points:
-            categoryCounts[point] += 1
-        return cls(categoryCounts)
+            category_counts[point] += 1
+        return cls(category_counts)
 
 
 class Binary(Multinomial):
-    def __init__(self, trueCount, falseCount, smoothingFactor=1.0):
-        categoryCounts = {True: trueCount, False: falseCount}
-        Multinomial.__init__(self, categoryCounts, smoothingFactor)
+    def __init__(self, true_count, false_count, smoothing_factor=1.0):
+        category_counts = {True: true_count, False: false_count}
+        Multinomial.__init__(self, category_counts, smoothing_factor)
 
     def __str__(self):
         return "Discrete Binary distribution: true count = %s, false count = %s" % (
-        self.categoryCounts[True], self.categoryCounts[False])
+        self.category_counts[True], self.category_counts[False])
 
     @classmethod
-    def mleEstimate(cls, points, smoothingFactor=1.0):
-        trueCount = 0
+    def ml_estimator(cls, points, smoothing_factor=1.0):
+        true_count = 0
         for point in points:
-            if point: trueCount += 1
-        falseCount = len(points) - trueCount
-        return cls(trueCount, falseCount, smoothingFactor)
+            if point:
+                true_count += 1
+        false_count = len(points) - true_count
+        return cls(true_count, false_count, smoothing_factor)
 
 
 ##########   Errors   ##########
