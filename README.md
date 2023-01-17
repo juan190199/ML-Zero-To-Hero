@@ -1,4 +1,4 @@
-# Machine Learning From Scratch
+# Machine Learning Zero-To-Hero
 
 ## About
 Python implementations from scratch of some of the fundamental Machine Learning models and algorithms. 
