@@ -183,41 +183,94 @@ def make_diagonal(x):
     return m
 
 
-def KFold(X, y, k, shuffle=True):
+# def KFold(X, y, k, shuffle=True):
+#     """
+#
+#     :param X:
+#     :param y:
+#     :param k:
+#     :param shuffle:
+#     :return:
+#     """
+#     if shuffle:
+#         X, y = shuffle_data(X, y)
+#
+#     n_samples = len(y)
+#     left_overs = {}
+#     n_left_overs = (n_samples % k)
+#     if n_left_overs != 0:
+#         left_overs['X'] = X[-n_left_overs:]
+#         left_overs['y'] = y[-n_left_overs:]
+#         X = X[:-n_left_overs]
+#         y = y[:-n_left_overs]
+#
+#     X_split = np.split(X, k)
+#     y_split = np.split(y, k)
+#
+#     sets = []
+#     for i in range(k):
+#         X_test, y_test = X_split[i], y_split[i]
+#         X_train = np.concatenate(X_split[:i] + X_split[i + 1:], axis=0)
+#         y_train = np.concatenate(y_split[:i] + y_split[i + 1:], axis=0)
+#         sets.append([X_train, X_test, y_train, y_test])
+#
+#     # Add left over samples to last set as training samples
+#     if n_left_overs != 0:
+#         np.append(sets[-1][0], left_overs['X'], axis=0)
+#         np.append(sets[-1][2], left_overs['y'], axis=0)
+#
+#     return np.array(sets)
+
+
+class KFoldCV:
+    """
+    Provides train/test indices to split data in train/test sets.
+    Split dataset into k consecutive folds;
+    each fold is then used once as a validation while the k-1 remaining folds form the trraining set
     """
 
-    :param X:
-    :param y:
-    :param k:
-    :param shuffle:
-    :return:
-    """
-    if shuffle:
-        X, y = shuffle_data(X, y)
+    def __init__(self, n_folds, shuffle=True, seed=12345):
+        self.seed = seed
+        self.shuffle = shuffle
+        self.n_folds = n_folds
 
-    n_samples = len(y)
-    left_overs = {}
-    n_left_overs = (n_samples % k)
-    if n_left_overs != 0:
-        left_overs['X'] = X[-n_left_overs:]
-        left_overs['y'] = y[-n_left_overs:]
-        X = X[:-n_left_overs]
-        y = y[:-n_left_overs]
+    def split(self, data_set):
+        """
+        Create mask for test set.
+        :param data_set: data set
+        :return:
+        """
+        # Shuffle modifies indices inplace
+        n_samples = data_set.shape[0]
+        indices = np.arange(n_samples)
+        if self.shuffle:
+            # A fixed seed and a fixed series of calls to ‘RandomState’ methods using the same parameters
+            # will always produce the same results
+            rstate = np.random.RandomState(self.seed)
+            rstate.shuffle(indices)
 
-    X_split = np.split(X, k)
-    y_split = np.split(y, k)
+        for test_mask in self._iter_test_masks(n_samples, indices):
+            train_index = indices[np.logical_not(test_mask)]
+            test_index = indices[test_mask]
+            yield train_index, test_index
 
-    sets = []
-    for i in range(k):
-        X_test, y_test = X_split[i], y_split[i]
-        X_train = np.concatenate(X_split[:i] + X_split[i + 1:], axis=0)
-        y_train = np.concatenate(y_split[:i] + y_split[i + 1:], axis=0)
-        sets.append([X_train, X_test, y_train, y_test])
+    def _iter_test_masks(self, n_samples, indices):
+        """
+        Create test mask
+        :param n_samples:
+        :param indices:
+        :return:
+        """
+        # If n_samples cannot be evenly split,
+        # rest of samples have to be distributed between folds beginning with the leading one
+        fold_sizes = (n_samples // self.n_folds) * np.ones(self.n_folds, dtype=np.int_)
+        fold_sizes[:n_samples % self.n_folds] += 1
 
-    # Add left over samples to last set as training samples
-    if n_left_overs != 0:
-        np.append(sets[-1][0], left_overs['X'], axis=0)
-        np.append(sets[-1][2], left_overs['y'], axis=0)
-
-    return np.array(sets)
-
+        current = 0
+        for fold_size in fold_sizes:
+            start, stop = current, current + fold_size
+            test_indices = indices[start:stop]
+            test_mask = np.zeros(n_samples, dtype=np.bool_)
+            test_mask[test_indices] = True
+            yield test_mask
+            current = stop
