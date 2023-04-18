@@ -43,7 +43,7 @@ def euclidean_distance(x1, x2):
     :param x2:ndarray of shape (n_samples2, n_features)
     :return:
     """
-    distance = np.sqrt(np.sum(np.square(np.subtract(x1[:, None, :], x2)), axis=2))
+    distance = np.sqrt(np.sum(np.power(x1 - x2, 2), axis=0))
     return distance
 
 
