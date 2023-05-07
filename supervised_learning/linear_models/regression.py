@@ -171,20 +171,20 @@ class LinearRegression(Regression):
 
         :return: self
         """
-        sample_weight = np.identity(X.shape[0]) if sample_weight is None else np.diag(sample_weight)
+        sample_weights = np.identity(X.shape[0]) if sample_weights is None else np.diag(sample_weights)
         # If not gradient descent => Normal equations
         if not self.gradient_descent:
             # Insert constant ones for bias weights
             X = np.insert(X, 0, 1, axis=1)
             # Calculate weights by least squares (using Moore-Penrose pseudo-inverse)
-            U, S, V = np.linalg.svd(X.T.dot(sample_weight).dot(X))
+            U, S, V = np.linalg.svd(X.T.dot(sample_weights).dot(X))
             S = np.diag(S)
             X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
             # Calculate weights by normal equation
-            self.w = X_sq_reg_inv.dot(X.T).dot(sample_weight).dot(y)
+            self.w = X_sq_reg_inv.dot(X.T).dot(sample_weights).dot(y)
 
         else:
-            super(LinearRegression, self).fit(np.sqrt(sample_weight).dot(X), np.sqrt(sample_weight).dot(y))
+            super(LinearRegression, self).fit(np.sqrt(sample_weights).dot(X), np.sqrt(sample_weights).dot(y))
 
 
 class LassoRegression(Regression):
