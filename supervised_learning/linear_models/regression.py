@@ -3,6 +3,7 @@ import numpy as np
 
 from utils.data_manipulation import (normalize, polynomial_features)
 from utils.data_operation import rescale_data
+from utils.data_operation import calculate_covariance_matrix
 
 
 class L1_Regularization():
@@ -142,8 +143,10 @@ class LinearRegression(Regression):
             The step length that will be used when updating the weights.
 
         :param gradient_descent: boolean
-            True or false depending if gradient descent should be used when training.
+            True or false depending on if gradient descent should be used when training.
             If false then we use batch optimization by least squares.
+
+        :return: self
         """
         self.gradient_descent = gradient_descent
         # No regularization
@@ -151,7 +154,7 @@ class LinearRegression(Regression):
         self.regularization.grad = lambda x: 0
         super(LinearRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weights=None):
         """
 
         :param X: ndarray of shape (n_samples, n_features)
@@ -160,67 +163,28 @@ class LinearRegression(Regression):
         :param y: ndarray of shape (n_samples, )
             Target values
 
+        :param sample_weight: array_like of shape (n_samples, )
+            If None, then samples are equally weighted. Otherwise, sample_weight is used
+            to weight the observations.
+            Common choice of sample weights is exp(-(x^{(i)} - x)^2 / 2 * tau^2), where x is the input for which
+            the prediction is to be made.
+
         :return: self
         """
+        sample_weight = np.identity(X.shape[0]) if sample_weight is None else np.diag(sample_weight)
         # If not gradient descent => Normal equations
         if not self.gradient_descent:
             # Insert constant ones for bias weights
             X = np.insert(X, 0, 1, axis=1)
-            # Calculate weights by least squares (using Moore-Penrose pseudoinverse)
-            U, S, V = np.linalg.svd(X.T.dot(X))
+            # Calculate weights by least squares (using Moore-Penrose pseudo-inverse)
+            U, S, V = np.linalg.svd(X.T.dot(sample_weight).dot(X))
             S = np.diag(S)
             X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
-            self.w = X_sq_reg_inv.dot(X.T).dot(y)
+            # Calculate weights by normal equation
+            self.w = X_sq_reg_inv.dot(X.T).dot(sample_weight).dot(y)
 
         else:
-            super(LinearRegression, self).fit(X, y)
-
-
-class LocallyWeightedLinearRegression(Regression):
-    """
-
-    """
-    def __init__(self, tau):
-        """
-
-        :param tau:
-        """
-        self.tau = tau
-
-    def fit(self, X, y):
-        """
-
-        :param X:
-        :param y:
-        :return:
-        """
-        self.X = X
-        self.y = y
-
-    def predict(self, X):
-        """
-
-        :param X:
-        :return:
-        """
-        sq_norm = np.linalg.norm(self.X[:, None, :] - X[None, :, :], axis=-1) ** 2
-        weights = np.exp(-sq_norm / (2 * self.tau ** 2))
-        self.w = np.linalg.inv(self.X.T.dot(weights).dot(self.X)).dot(self.X.T).dot(weights).dot(self.y).T
-
-        # Insert constant ones for bias weights
-        X = np.insert(X, 0, 1, axis=1)
-        y_pred = X.dot(self.w)
-        return y_pred
-
-
-class WeightedLinearRegression(Regression):
-    # ToDo
-    ...
-
-
-class TotalLeastSquares(Regression):
-    # ToDo
-    ...
+            super(LinearRegression, self).fit(np.sqrt(sample_weight).dot(X), np.sqrt(sample_weight).dot(y))
 
 
 class LassoRegression(Regression):
