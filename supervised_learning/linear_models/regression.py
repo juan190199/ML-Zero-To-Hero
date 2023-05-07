@@ -360,7 +360,7 @@ class PolynomialRidgeRegression(Regression):
             The step length that will be used when updating the weights.
 
         :param gradient_descent: boolean
-            True or false depending if gradient descent should be used when training.
+            True or false depending on if gradient descent should be used when training.
             If false then we use batch optimization by least squares.
         """
         self.degree = degree
