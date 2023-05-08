@@ -20,38 +20,70 @@ The purpose of this project is to present the inner workings of the algorithms i
 
 ## Implementations
 ### Supervised Learning
-- [Decision Forest](supervised_learning/decision_forest.py)
-- [Decision Tree](supervised_learning/decision_tree.py)
-- [Density Forest](supervised_learning/density_forest.py)
-- [Density Tree](supervised_learning/density_tree.py)
-- [Elastic Net](supervised_learning/regression.py)
-- [Fisher Linear Discriminant](supervised_learning/fisher_linear_discriminant.py)
-- [Generative Classifier (by Density Tree)](supervised_learning/generative_classifier.py)
-- [K Nearest Neighbors](supervised_learning/k_nearest_neighbors.py)
-- [Lasso Regression](supervised_learning/regression.py)
-- [Linear Discriminant Analysis](supervised_learning/linear_discriminant_analysis.py)
-- [Linear Regression](supervised_learning/regression.py)
-- [Logistic Regression](supervised_learning/logistic_regression.py)
-- [Multilayer Perceptron](supervised_learning/multilayer_perceptron.py)
-- [Naive Bayes](supervised_learning/naive_bayes.py)
-- [Perceptron](supervised_learning/perceptron.py)
-- [Polynomial Regression](supervised_learning/regression.py)
-- [Quadratic Discriminant Analysis](supervised_learning/quadratic_discriminant_analysis.py)
-- [Regression Tree](supervised_learning/regression_tree.py)
+- #### Linear models:
+  - [Ordinary least squares](supervised_learning/linear_models/regression)
+  - [Ridge regression](supervised_learning/linear_models/regression.py)
+  - [Ridge classifier](supervised_learning/linear_models/linear_classifiers.py)
+  - [Lasso](supervised_learning/linear_models/regression.py)
+
+[//]: # (- [Logistic Regression]&#40;supervised_learning/linear_models/linear_classifiers.py&#41;)
+
+[//]: # (- [Decision Forest]&#40;supervised_learning/decision_forest.py&#41;)
+
+[//]: # (- [Decision Tree]&#40;supervised_learning/decision_tree.py&#41;)
+
+[//]: # (- [Density Forest]&#40;supervised_learning/density_forest.py&#41;)
+
+[//]: # (- [Density Tree]&#40;supervised_learning/density_tree.py&#41;)
+
+[//]: # (- [Elastic Net]&#40;supervised_learning/linear_models/regression.py&#41;)
+
+[//]: # (- [Fisher Linear Discriminant]&#40;supervised_learning/fisher_linear_discriminant.py&#41;)
+
+[//]: # (- [Generative Classifier &#40;by Density Tree&#41;]&#40;supervised_learning/generative_classifier.py&#41;)
+
+[//]: # (- [K Nearest Neighbors]&#40;supervised_learning/k_nearest_neighbors.py&#41;)
+
+[//]: # ()
+[//]: # (- [Linear Discriminant Analysis]&#40;supervised_learning/linear_discriminant_analysis.py&#41;)
+
+[//]: # ()
+[//]: # ()
+[//]: # (- [Multilayer Perceptron]&#40;supervised_learning/multilayer_perceptron.py&#41;)
+
+[//]: # (- [Naive Bayes]&#40;supervised_learning/naive_bayes.py&#41;)
+
+[//]: # (- [Perceptron]&#40;supervised_learning/linear_models/perceptron.py&#41;)
+
+[//]: # (- [Polynomial Regression]&#40;supervised_learning/linear_models/regression.py&#41;)
+
+[//]: # (- [Quadratic Discriminant Analysis]&#40;supervised_learning/quadratic_discriminant_analysis.py&#41;)
+
+[//]: # (- [Regression Tree]&#40;supervised_learning/regression_tree.py&#41;)
 
 ### Unsupervised Learning
 
 ### Reinforcement Learning
 
 ### Deep Learning
-- [Neural Network](deep_learning/neural_network.py)
-- [Layers](deep_learning/layers.py)
-  - Activation Layer
-  - Average Pooling Layer
-  - Constant Padding Layer
-  - Convolutional Layer
-  - Dropout Layer
-  - Fully-Connected (Dense) Layer
-  - Max Pooling Layer
-  - Zero Padding Layer
+
+[//]: # (- [Neural Network]&#40;deep_learning/neural_network.py&#41;)
+
+[//]: # (- [Layers]&#40;deep_learning/layers.py&#41;)
+
+[//]: # (  - Activation Layer)
+
+[//]: # (  - Average Pooling Layer)
+
+[//]: # (  - Constant Padding Layer)
+
+[//]: # (  - Convolutional Layer)
+
+[//]: # (  - Dropout Layer)
+
+[//]: # (  - Fully-Connected &#40;Dense&#41; Layer)
+
+[//]: # (  - Max Pooling Layer)
+
+[//]: # (  - Zero Padding Layer)
 
