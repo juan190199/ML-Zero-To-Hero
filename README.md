@@ -87,3 +87,7 @@ The purpose of this project is to present the inner workings of the algorithms i
 
 [//]: # (  - Zero Padding Layer)
 
+### Examples
+- [Least squares: ordinary and weighted](examples/least_squares.ipynb)
+- [Linear classifiers: logistic regression and ridge classifier](examples/linear_classifiers.ipynb)
+
