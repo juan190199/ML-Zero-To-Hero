@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from utils.data_manipulation import (normalize, polynomial_features)
+from utils.data_manipulation import (normalize, polynomial_features, make_diagonal)
 from utils.data_operation import rescale_data
 from utils.data_operation import calculate_covariance_matrix
 
@@ -163,7 +163,7 @@ class LinearRegression(Regression):
         :param y: ndarray of shape (n_samples, )
             Target values
 
-        :param sample_weight: array_like of shape (n_samples, )
+        :param sample_weights: array_like of shape (n_samples, )
             If None, then samples are equally weighted. Otherwise, sample_weight is used
             to weight the observations.
             Common choice of sample weights is exp(-(x^{(i)} - x)^2 / 2 * tau^2), where x is the input for which
@@ -171,7 +171,7 @@ class LinearRegression(Regression):
 
         :return: self
         """
-        sample_weights = np.identity(X.shape[0]) if sample_weights is None else np.diag(sample_weights)
+        sample_weights = make_diagonal(np.ones(X.shape[0])) if sample_weights is None else make_diagonal(sample_weights)
         # If not gradient descent => Normal equations
         if not self.gradient_descent:
             # Insert constant ones for bias weights
