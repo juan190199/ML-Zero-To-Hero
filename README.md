@@ -25,6 +25,19 @@ The purpose of this project is to present the inner workings of the algorithms i
   - [Ridge regression](supervised_learning/linear_models/regression.py)
   - [Ridge classifier](supervised_learning/linear_models/linear_classifiers.py)
   - [Lasso](supervised_learning/linear_models/regression.py)
+  - [Least angle regression](supervised_learning/linear_models/regression.py)
+  - [LARS Lasso]
+  - [Orthogonal matching pursuit]
+  - [Bayesian regression]
+  - [Logistic regression]
+  - [Generalized linear models]
+  - [Stochastic gradient descent]
+  - [Perceptron]
+  - [Passive aggressive algorithms]
+  - [Robustness regression]
+  - [Quantile regression]
+  - [Polynomial regression]
+
 
 [//]: # (- [Logistic Regression]&#40;supervised_learning/linear_models/linear_classifiers.py&#41;)
 
