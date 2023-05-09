@@ -339,7 +339,7 @@ class ElasticNet(Regression):
         return super(ElasticNet, self).predict(X)
 
 
-class LAR(Regression):
+class LARS(Regression):
     def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
         self.active_set = []
