@@ -340,10 +340,11 @@ class ElasticNet(Regression):
 
 
 class LAR(Regression):
-    def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01):
+    def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
         self.active_set = []
         self.coefficients = None
+        self.min_error_dif = min_error_dif
         super().__init__(n_iterations, learning_rate)
 
     def fit(self, X, y):
@@ -384,6 +385,13 @@ class LAR(Regression):
             # Update the training error
             y_pred = X.dot(self.coefficients)
             mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.coefficients))
+            self.training_errors.append(mse)
+
+            # Check for minimum improvement in training error
+            if len(self.training_errors) > 0:
+                error_dif = self.training_errors[-2] - mse
+                if error_dif < self.min_error_dif:
+                    break
 
             # If the angle between the residual and the feature is small, remove the feature from the active set
             if current_angle < 1e-15:
