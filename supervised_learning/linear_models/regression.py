@@ -187,6 +187,53 @@ class LinearRegression(Regression):
             super(LinearRegression, self).fit(np.sqrt(sample_weights).dot(X), np.sqrt(sample_weights).dot(y))
 
 
+class RidgeRegression(Regression):
+    """
+    Also referred to as Tikhonov regularization. Linear regression model with a regularization factor.
+    Model that tries to balance the fit of the model with respect to the training data and the complexity
+    of the model. A large regularization factor with decreases the variance of the model.
+    """
+
+    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001, gradient_descent=True):
+        """
+
+        :param reg_factor: float
+            The factor that will determine the amount of regularization and feature shrinkage.
+
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
+
+        :param learning_rate: float
+            The step length that will be used when updating the weights.
+        """
+        self.gradient_descent = gradient_descent
+        self.reg_factor = reg_factor
+        self.regularization = L2_Regularization(alpha=self.reg_factor)
+        super(RidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y):
+        """
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target values
+
+        :return: self
+        """
+        # If not gradient descent => Normal equations
+        if not self.gradient_descent:
+            # Insert constant ones for bias weights
+            X = np.insert(X, 0, 1, axis=1)
+            U, S, V = np.linalg.svd(X.T.dot(X) + self.regularization * np.identity(X.shape[0]))
+            S = np.diag(S)
+            X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
+            self.w = X_sq_reg_inv.dot(X.T).dot(y)
+        else:
+            super(RidgeRegression, self).fit(X, y)
+
+
 class LassoRegression(Regression):
     """
     Linear regression model with a regularization factor which does both variable selection
@@ -240,6 +287,58 @@ class LassoRegression(Regression):
         return super(LassoRegression, self).predict(X)
 
 
+class ElasticNet(Regression):
+    """
+    Regression where a combination of l1 and l2 regularization are used. The
+    ratio of their contributions are set with the 'l1_ratio' parameter.
+    """
+
+    def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01):
+        """
+
+        :param degree: int
+            The degree of the polynomial that the independent variable X will be transformed to.
+
+        :param reg_factor: float
+             The factor that will determine the amount of regularization and feature shrinkage.
+
+        :param n_iterations: float
+            The number of training iterations the algorithm will tune the weights for.
+
+        :param learning_rate: float
+            The step length that will be used when updating the weights.
+        """
+        self.degree = degree
+        self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
+        super(ElasticNet, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y):
+        """
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Training data
+
+        :param y: ndarray of shape (n_samples, )
+            Target values
+
+        :return: self
+        """
+        X = normalize(polynomial_features(X, degree=self.degree))
+        super(ElasticNet, self).fit(X, y)
+
+    def predict(self, X):
+        """
+
+        :param X: ndarray of shape (n_samples, n_features)
+            Test data
+
+        :return: ndarray of shape (n_samples, )
+            Predicted values
+        """
+        X = normalize(polynomial_features(X, degree=self.degree))
+        return super(ElasticNet, self).predict(X)
+
+
 class PolynomialRegression(Regression):
     """
     Performs a non-linear transformation of the data before fitting the model
@@ -289,53 +388,6 @@ class PolynomialRegression(Regression):
         """
         X = polynomial_features(X, degree=self.degree)
         return super(PolynomialRegression, self).predict(X)
-
-
-class RidgeRegression(Regression):
-    """
-    Also referred to as Tikhonov regularization. Linear regression model with a regularization factor.
-    Model that tries to balance the fit of the model with respect to the training data and the complexity
-    of the model. A large regularization factor with decreases the variance of the model.
-    """
-
-    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001, gradient_descent=True):
-        """
-
-        :param reg_factor: float
-            The factor that will determine the amount of regularization and feature shrinkage.
-
-        :param n_iterations: float
-            The number of training iterations the algorithm will tune the weights for.
-
-        :param learning_rate: float
-            The step length that will be used when updating the weights.
-        """
-        self.gradient_descent = gradient_descent
-        self.reg_factor = reg_factor
-        self.regularization = L2_Regularization(alpha=self.reg_factor)
-        super(RidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
-
-    def fit(self, X, y):
-        """
-
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
-
-        :param y: ndarray of shape (n_samples, )
-            Target values
-
-        :return: self
-        """
-        # If not gradient descent => Normal equations
-        if not self.gradient_descent:
-            # Insert constant ones for bias weights
-            X = np.insert(X, 0, 1, axis=1)
-            U, S, V = np.linalg.svd(X.T.dot(X) + self.regularization * np.identity(X.shape[0]))
-            S = np.diag(S)
-            X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
-            self.w = X_sq_reg_inv.dot(X.T).dot(y)
-        else:
-            super(RidgeRegression, self).fit(X, y)
 
 
 class PolynomialRidgeRegression(Regression):
@@ -392,55 +444,3 @@ class PolynomialRidgeRegression(Regression):
         """
         X = normalize(polynomial_features(X, degree=self.degree))
         return super(PolynomialRidgeRegression, self).predict(X)
-
-
-class ElasticNet(Regression):
-    """
-    Regression where a combination of l1 and l2 regularization are used. The
-    ratio of their contributions are set with the 'l1_ratio' parameter.
-    """
-
-    def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01):
-        """
-
-        :param degree: int
-            The degree of the polynomial that the independent variable X will be transformed to.
-
-        :param reg_factor: float
-             The factor that will determine the amount of regularization and feature shrinkage.
-
-        :param n_iterations: float
-            The number of training iterations the algorithm will tune the weights for.
-
-        :param learning_rate: float
-            The step length that will be used when updating the weights.
-        """
-        self.degree = degree
-        self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
-        super(ElasticNet, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
-
-    def fit(self, X, y):
-        """
-
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
-
-        :param y: ndarray of shape (n_samples, )
-            Target values
-
-        :return: self
-        """
-        X = normalize(polynomial_features(X, degree=self.degree))
-        super(ElasticNet, self).fit(X, y)
-
-    def predict(self, X):
-        """
-
-        :param X: ndarray of shape (n_samples, n_features)
-            Test data
-
-        :return: ndarray of shape (n_samples, )
-            Predicted values
-        """
-        X = normalize(polynomial_features(X, degree=self.degree))
-        return super(ElasticNet, self).predict(X)
