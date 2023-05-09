@@ -373,7 +373,15 @@ class LAR(Regression):
 
             # Calculate the current angle between the residual and the feature
             X_active = X[:, self.active_set]
-            projection = X_active.dot(np.linalg.inv(X_active.T.dot(X_active))).dot(X_active.T).dot(y)
+
+            # projection = X_active.dot(np.linalg.inv(X_active.T.dot(X_active))).dot(X_active.T).dot(y)
+            # Calculate the Cholesky decomposition of X_active.T.dot(X_active)
+            L = np.linalg.cholesky(X_active.T.dot(X_active))
+            # Solve for the inverse of X_active.T.dot(X_active) using the Cholesky decomposition
+            inv_XTX = np.linalg.solve(L.T, np.linalg.solve(L, np.eye(X_active.shape[1])))
+            # Compute the projection matrix using the inverse of X_active.T.dot(X_active)
+            projection = X_active.dot(inv_XTX).dot(X_active.T).dot(y)
+
             residual = y - projection
             angles = X.T.dot(residual)
             current_angle = np.abs(angles[j])
