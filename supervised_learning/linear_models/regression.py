@@ -339,6 +339,59 @@ class ElasticNet(Regression):
         return super(ElasticNet, self).predict(X)
 
 
+class LAR(Regression):
+    def __init__(self, n_iterations, leanring_rate):
+        super().__init__(n_iterations, leanring_rate)
+        self.active_set = []
+        self.coefficients = None
+
+    def fit(self, X, y):
+        # Insert constant ones for bias weights
+        X = np.insert(X, 0, 1, axis=1)
+        self.training_errors = []
+        n_features = X.shape[1]
+        self.initialize_weights(n_features=n_features)
+
+        # Initialize the active set
+        self.active_set = []
+        self.coefficients = np.zeros(n_features)
+
+        # Loop over the number of iterations
+        for i in range(self.n_iterations):
+            # Calculate the correlations between the features and the residuals
+            correlations = X.T.dot(y - X.dot(self.coefficients))
+
+            # Find the features with the maximum absolute correlation
+            j = np.argmax(np.abs(correlations))
+            sign = np.sign(correlations[j])
+
+            # If the feature is not in the active set, add it to the active set
+            if j not in self.active_set:
+                self.active_set.append(j)
+
+            # Calculate the current angle between the residual and the feature
+            X_active = X[:, self.active_set]
+            projection = X_active.dot(np.linalg.inv(X_active.T.dot(X_active))).dot(X_active.T).dot(y)
+            residual = y - projection
+            angles = X.T.dot(residual)
+            current_angle = np.abs(angles[j])
+
+            # Calculate the step size and update the coefficients
+            step_size = self.learning_rate / n_features * sign
+            self.coefficients[self.active_set] += step_size
+
+            # Update the training error
+            y_pred = X.dot(self.coefficients)
+            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.coefficients))
+
+            # If the angle between the residual and the feature is small, remove the feature from the active set
+            if current_angle < 1e-15:
+                self.active_set.remove(j)
+                self.coefficients[j] = 0
+                if len(self.active_set) == 0:
+                    break
+
+
 class PolynomialRegression(Regression):
     """
     Performs a non-linear transformation of the data before fitting the model
