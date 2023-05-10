@@ -340,7 +340,27 @@ class ElasticNet(Regression):
 
 
 class LARS(Regression):
+    """
+    Linear Approximate RANSAC (LARS) algorithm.
+    """
     def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
+        """
+
+        Args:
+            reg_factor: float
+                The factor that will determine the amount of regularization and feature shrinkage.
+
+            l1_ratio:
+            n_iterations: float
+                The number of training iterations the algorithm will tune the weights for.
+
+            learning_rate: float
+                The step length that will be used when updating the weights.
+
+            min_error_dif: float
+                The minimum difference between the current error and the previous error to continue the algorithm.
+
+        """
         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
         self.active_set = []
         self.coefficients = None
@@ -348,6 +368,18 @@ class LARS(Regression):
         super().__init__(n_iterations, learning_rate)
 
     def fit(self, X, y):
+        """
+
+        Args:
+            X: ndarray of shape (n_samples, n_features)
+                Training data
+
+            y: ndarray of shape (n_samples, )
+                Target values
+
+        Returns: self
+
+        """
         # Insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
         self.training_errors = []
@@ -407,6 +439,64 @@ class LARS(Regression):
                 self.coefficients[j] = 0
                 if len(self.active_set) == 0:
                     break
+
+
+class OMP(Regression):
+    """
+    Orthogonal Matching Pursuit (OMP) algorithm.
+    """
+    def __init__(self, n_iterations=3000, learning_rate=0.01, n_nonzero_coefs=10):
+        """
+        Args:
+            n_iterations: float
+                The number of training iterations the algorithm will tune the weights for.
+
+            learning_rate: float
+                The step length that will be used when updating the weights.
+
+            n_nonzero_coefs: float
+                The number of non-zero coefficients that will be used to fit the model
+        """
+        self.n_nonzero_coefs = n_nonzero_coefs
+        super().__init__(n_iterations, learning_rate)
+
+    def fit(self, X, y):
+        """
+        Args:
+            X: ndarray of shape (n_samples, n_features)
+                Training data
+
+            y: ndarray of shape (n_samples, )
+                Target values
+
+        Returns: self
+        """
+        # Insert constant ones for bias weights
+        X = np.insert(X, 0, 1, axis=1)
+        self.training_errors = []
+        n_features = X.shape[1]
+        self.initialize_weights(n_features=n_features)
+
+        # OMP algorithm
+        residual = y.copy()
+        support = set()
+        coefficients = np.zeros(n_features)
+        for i in range(self.n_nonzero_coefs):
+            correlations = np.abs(X.T.dot(residual))
+            j = np.argmax(correlations)
+            support.add(j)
+            X_s = X[:, list(support)]
+            coef_s = np.linalg.inv(X_s.T.dot(X_s)).dot(X_s.T).dot(y)
+            coefficients[list(support)] = coef_s
+
+            # Update residual
+            residual = y - X[:, list(support)].dot(coef_s)
+
+            # Calculate L2 loss w.r.t. w
+            mse = np.mean(0.5 * (y - X.dot(coefficients)) ** 2 + self.regularization(coefficients))
+            self.training_errors.append(mse)
+
+        self.w = coefficients
 
 
 class PolynomialRegression(Regression):
