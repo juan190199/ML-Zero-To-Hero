@@ -182,12 +182,14 @@ class Regression(object):
 
             for j in range(X.shape[1]):
                 w_j_old = self.w[j]
+                w_except_j = w_old[np.arange(w_old.shape[0]) != j]
+                X_except_j = X[:, np.arange(X.shape[1]) != j]
 
                 # Calculate the partial derivative of the objective function w.r.t. the j-th coordinate of the weight vector.
-                grad_j = -X[:, j].dot(y - y_pred + X.dot(self.w) - X[:, j] * w_j_old)
+                rho_j = X[:, j].dot(y - w_except_j.dot(X_except_j))
 
                 # Update the j-th coordinate of the weight vector
-                self.w[j] = self.soft_thresholding_operator(grad_j, self.regularization.alpha)
+                self.w[j] = self.soft_thresholding_operator(rho_j, self.regularization.alpha / 2)
 
                 if self.w[j] != w_j_old:
                     y_pred += X[:, j] * (self.w[j] - w_j_old)
