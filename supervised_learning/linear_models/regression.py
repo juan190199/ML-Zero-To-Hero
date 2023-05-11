@@ -59,7 +59,7 @@ class Regression(object):
 
     """
 
-    def __init__(self, n_iterations, learning_rate):
+    def __init__(self, n_iterations=1000, learning_rate=0.01, tol=1e-4, method='gd'):
         """
 
         :param n_iterations: float
@@ -67,9 +67,16 @@ class Regression(object):
 
         :param learning_rate: float
             The step length that will be used when updating the weights.
+
+        :param tol: float
+
+        :param method: str
+
         """
         self.n_iterations = n_iterations
         self.learning_rate = learning_rate
+        self.tol = tol
+        self.method = method
 
     def initialize_weights(self, n_features, scale=1):
         """
@@ -102,16 +109,12 @@ class Regression(object):
         self.training_errors = []
         self.initialize_weights(n_features=X.shape[1])
 
-        # Gradient descent for n_iterations
-        for i in range(self.n_iterations):
-            y_pred = X.dot(self.w)
-            # Calculate L2 loss w.r.t. w
-            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
-            self.training_errors.append(mse)
-            # Gradient of L2 loss w.r.t. w
-            grad_w = -(y - y_pred).dot(X) + self.regularization.grad(self.w)
-            # Update the weights
-            self.w -= self.learning_rate * grad_w
+        if self.method == 'gd':
+            self.gradient_descent(X, y)
+        elif self.method == 'cd':
+            self.coordinate_descent(X, y)
+        else:
+            raise ValueError('Method not supported.')
 
     def predict(self, X):
         """
@@ -127,6 +130,56 @@ class Regression(object):
         y_pred = X.dot(self.w)
         return y_pred
 
+    def gradient_descent(self, X, y):
+        """
+        Perform gradient descent optimization.
+
+        Args:
+            X: ndarray of shape (n_samples, n_features)
+                Training data.
+
+            y: ndarray of shape (n_samples, )
+                Target data
+
+        Returns: self
+
+        """
+        for i in range(self.n_iterations):
+            y_pred = X.dot(self.w)
+            # Calculate L2 loss w.r.t. w
+            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
+            self.training_errors.append(mse)
+            # Gradient of L2 loss w.r.t. w
+            grad_w = -(y - y_pred).dot(X) + self.regularization.grad(self.w)
+            # Update the weights
+            self.w -= self.learning_rate * grad_w
+
+            # Check convergence criterion
+            if np.max(np.abs(grad_w)) < self.tol:
+                break
+
+    # def coordinate_descent(self, X, y):
+    #     """
+    #     Coordinate descent optimization algorithm.
+    #
+    #     Args:
+    #         X: ndarray of shape (n_samples, n_features)
+    #             Training data.
+    #
+    #         y: ndarray of shape (n_samples, )
+    #             Target data
+    #
+    #     Returns: self
+    #
+    #     """
+    #     for i in range(self.n_iterations):
+    #         y_pred = X.dot(self.w)
+    #         mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
+    #         self.training_errors.append(mse)
+    #         for j in range(X.shape[1]):
+    #             old_w_j = self.w[j]
+    #             # Calculate the partial derivative of the objective function w.r.t. the j-th coordinate of the weight vector.
+    #
 
 class LinearRegression(Regression):
     """
@@ -343,6 +396,7 @@ class LARS(Regression):
     """
     Linear Approximate RANSAC (LARS) algorithm.
     """
+
     def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
         """
 
@@ -445,6 +499,7 @@ class OMP(Regression):
     """
     Orthogonal Matching Pursuit (OMP) algorithm.
     """
+
     def __init__(self, n_iterations=3000, learning_rate=0.01, n_nonzero_coefs=10):
         """
         Args:
