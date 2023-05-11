@@ -158,28 +158,51 @@ class Regression(object):
             if np.max(np.abs(grad_w)) < self.tol:
                 break
 
-    # def coordinate_descent(self, X, y):
-    #     """
-    #     Coordinate descent optimization algorithm.
-    #
-    #     Args:
-    #         X: ndarray of shape (n_samples, n_features)
-    #             Training data.
-    #
-    #         y: ndarray of shape (n_samples, )
-    #             Target data
-    #
-    #     Returns: self
-    #
-    #     """
-    #     for i in range(self.n_iterations):
-    #         y_pred = X.dot(self.w)
-    #         mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
-    #         self.training_errors.append(mse)
-    #         for j in range(X.shape[1]):
-    #             old_w_j = self.w[j]
-    #             # Calculate the partial derivative of the objective function w.r.t. the j-th coordinate of the weight vector.
-    #
+    def coordinate_descent(self, X, y):
+        """
+        Coordinate descent optimization algorithm.
+
+        Args:
+            X: ndarray of shape (n_samples, n_features)
+                Training data.
+
+            y: ndarray of shape (n_samples, )
+                Target data
+
+        Returns: self
+
+        """
+        for i in range(self.n_iterations):
+            # Store old weights for convergence check:
+            w_old = self.w.copy()
+
+            y_pred = X.dot(self.w)
+            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
+            self.training_errors.append(mse)
+
+            for j in range(X.shape[1]):
+                w_j_old = self.w[j]
+
+                # Calculate the partial derivative of the objective function w.r.t. the j-th coordinate of the weight vector.
+                grad_j = -X[:, j].dot(y - y_pred + X.dot(self.w) - X[:, j] * w_j_old)
+
+                # Update the j-th coordinate of the weight vector
+                self.w[j] = self.soft_thresholding_operator(grad_j, self.regularization.alpha)
+
+                if self.w[j] != w_j_old:
+                    y_pred += X[:, j] * (self.w[j] - w_j_old)
+
+            if np.linalg.norm(self.w - w_old) < self.tol:
+                break
+
+    def soft_thresholding_operator(self, x, lambda_):
+        if x > 0 and lambda_ < abs(x):
+            return x - lambda_
+        elif x < 0 and lambda_ < abs(x):
+            return x + lambda_
+        else:
+            return 0.0
+
 
 class LinearRegression(Regression):
     """
