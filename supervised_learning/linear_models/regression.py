@@ -319,7 +319,7 @@ class LassoRegression(Regression):
     data and the complexity of the model. A large regularization factor with decreases the variance of the model.
     """
 
-    def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01):
+    def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01, method='cd'):
         """
 
         :param degree: int
@@ -336,7 +336,7 @@ class LassoRegression(Regression):
         """
         self.degree = degree
         self.regularization = L1_Regularization(alpha=reg_factor)
-        super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+        super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
 
     def fit(self, X, y):
         """
