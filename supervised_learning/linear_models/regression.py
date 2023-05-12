@@ -100,13 +100,13 @@ class Regression(object):
     def fit(self, X, y, sample_weight=None):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
+        Args:
+            X:
+            y:
+            sample_weight:
 
-        :param y: ndarray of shape (n_samples, )
-            Target data
+        Returns:
 
-        :return: self
         """
         # Preprocess data
         X = normalize(X)
@@ -295,27 +295,18 @@ class RidgeRegression(Regression):
 
         super(RidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
-    def fit(self, X, y, sample_weights):
+    def fit(self, X, y, sample_weights=None):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
+        Args:
+            X:
+            y:
+            sample_weights:
 
-        :param y: ndarray of shape (n_samples, )
-            Target values
+        Returns:
 
-        :return: self
         """
-        if self.method == "normal_equations":
-            self.normal_equations(X, y, sample_weights)
-        elif self.method == "gradient_descent":
-            self.gradient_descent(np.sqrt(sample_weights).dot(X), np.sqrt(sample_weights).dot(y))
-        elif self.method == "lar":
-            self.LAR(X, y)
-        elif self.method == "omp":
-            self.OMP(X, y)
-
-        return self
+        super(RidgeRegression, self).fit(X, y, sample_weights)
 
 
 class LassoRegression(Regression):
@@ -348,23 +339,19 @@ class LassoRegression(Regression):
 
         super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
+        Args:
+            X:
+            y:
+            sample_weight:
 
-        :param y: ndarray of shape (n_samples, )
-            Target values
+        Returns:
 
-        :return: self
         """
         X = normalize(polynomial_features(X, degree=self.degree))
-
-        if self.method == "gradient_descent":
-            self.gradient_descent(X, y)
-        elif self.method == "coordinate_descent":
-            self.coordinate_descent(X, y)
+        super(LassoRegression, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
         """
@@ -409,23 +396,19 @@ class ElasticNet(Regression):
 
         super(ElasticNet, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
+        Args:
+            X:
+            y:
+            sample_weight:
 
-        :param y: ndarray of shape (n_samples, )
-            Target values
+        Returns:
 
-        :return: self
         """
         X = normalize(polynomial_features(X, degree=self.degree))
-
-        if self.method == "gradient_descent":
-            self.gradient_descent(X, y)
-        elif self.method == "coordinate_descent":
-            self.coordinate_descent(X, y)
+        super(ElasticNet, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
         """
@@ -440,163 +423,163 @@ class ElasticNet(Regression):
         return super(ElasticNet, self).predict(X)
 
 
-class LARS(Regression):
-
-    def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
-        """
-
-        Args:
-            reg_factor: float
-                The factor that will determine the amount of regularization and feature shrinkage.
-
-            l1_ratio:
-            n_iterations: float
-                The number of training iterations the algorithm will tune the weights for.
-
-            learning_rate: float
-                The step length that will be used when updating the weights.
-
-            min_error_dif: float
-                The minimum difference between the current error and the previous error to continue the algorithm.
-
-        """
-        self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
-        self.active_set = []
-        self.coefficients = None
-        self.min_error_dif = min_error_dif
-        super().__init__(n_iterations, learning_rate)
-
-    def fit(self, X, y):
-        """
-
-        Args:
-            X: ndarray of shape (n_samples, n_features)
-                Training data
-
-            y: ndarray of shape (n_samples, )
-                Target values
-
-        Returns: self
-
-        """
-        # Insert constant ones for bias weights
-        X = np.insert(X, 0, 1, axis=1)
-        self.training_errors = []
-        n_features = X.shape[1]
-        self.initialize_weights(n_features=n_features)
-
-        # Initialize the active set
-        self.active_set = []
-        self.coefficients = np.zeros(n_features)
-
-        # Loop over the number of iterations
-        for i in range(self.n_iterations):
-            # Calculate the correlations between the features and the residuals
-            correlations = X.T.dot(y - X.dot(self.coefficients))
-
-            # Find the features with the maximum absolute correlation
-            j = np.argmax(np.abs(correlations))
-            sign = np.sign(correlations[j])
-
-            # If the feature is not in the active set, add it to the active set
-            if j not in self.active_set:
-                self.active_set.append(j)
-
-            # Calculate the current angle between the residual and the feature
-            X_active = X[:, self.active_set]
-
-            # projection = X_active.dot(np.linalg.inv(X_active.T.dot(X_active))).dot(X_active.T).dot(y)
-            # Calculate the Cholesky decomposition of X_active.T.dot(X_active)
-            L = np.linalg.cholesky(X_active.T.dot(X_active))
-            # Solve for the inverse of X_active.T.dot(X_active) using the Cholesky decomposition
-            inv_XTX = np.linalg.solve(L.T, np.linalg.solve(L, np.eye(X_active.shape[1])))
-            # Compute the projection matrix using the inverse of X_active.T.dot(X_active)
-            projection = X_active.dot(inv_XTX).dot(X_active.T).dot(y)
-
-            residual = y - projection
-            angles = X.T.dot(residual)
-            current_angle = np.abs(angles[j])
-
-            # Calculate the step size and update the coefficients
-            step_size = self.learning_rate / n_features * sign
-            self.coefficients[self.active_set] += step_size
-
-            # Update the training error
-            y_pred = X.dot(self.coefficients)
-            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.coefficients))
-            self.training_errors.append(mse)
-
-            # Check for minimum improvement in training error
-            if len(self.training_errors) > 0:
-                error_dif = self.training_errors[-2] - mse
-                if error_dif < self.min_error_dif:
-                    break
-
-            # If the angle between the residual and the feature is small, remove the feature from the active set
-            if current_angle < 1e-15:
-                self.active_set.remove(j)
-                self.coefficients[j] = 0
-                if len(self.active_set) == 0:
-                    break
-
-
-class OMP(Regression):
-    """
-    Orthogonal Matching Pursuit (OMP) algorithm.
-    """
-
-    def __init__(self, n_iterations=3000, learning_rate=0.01, n_nonzero_coefs=10):
-        """
-        Args:
-            n_iterations: float
-                The number of training iterations the algorithm will tune the weights for.
-
-            learning_rate: float
-                The step length that will be used when updating the weights.
-
-            n_nonzero_coefs: float
-                The number of non-zero coefficients that will be used to fit the model
-        """
-        self.n_nonzero_coefs = n_nonzero_coefs
-        super().__init__(n_iterations, learning_rate)
-
-    def fit(self, X, y):
-        """
-        Args:
-            X: ndarray of shape (n_samples, n_features)
-                Training data
-
-            y: ndarray of shape (n_samples, )
-                Target values
-
-        Returns: self
-        """
-        # Insert constant ones for bias weights
-        X = np.insert(X, 0, 1, axis=1)
-        self.training_errors = []
-        n_features = X.shape[1]
-        self.initialize_weights(n_features=n_features)
-
-        # OMP algorithm
-        residual = y.copy()
-        support = set()
-        coefficients = np.zeros(n_features)
-        for i in range(self.n_nonzero_coefs):
-            correlations = np.abs(X.T.dot(residual))
-            j = np.argmax(correlations)
-            support.add(j)
-            X_s = X[:, list(support)]
-            coef_s = np.linalg.inv(X_s.T.dot(X_s)).dot(X_s.T).dot(y)
-            coefficients[list(support)] = coef_s
-
-            # Update residual
-            residual = y - X[:, list(support)].dot(coef_s)
-
-            # Calculate L2 loss w.r.t. w
-            mse = np.mean(0.5 * (y - X.dot(coefficients)) ** 2 + self.regularization(coefficients))
-            self.training_errors.append(mse)
-
-        self.w = coefficients
+# class LARS(Regression):
+#
+#     def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
+#         """
+#
+#         Args:
+#             reg_factor: float
+#                 The factor that will determine the amount of regularization and feature shrinkage.
+#
+#             l1_ratio:
+#             n_iterations: float
+#                 The number of training iterations the algorithm will tune the weights for.
+#
+#             learning_rate: float
+#                 The step length that will be used when updating the weights.
+#
+#             min_error_dif: float
+#                 The minimum difference between the current error and the previous error to continue the algorithm.
+#
+#         """
+#         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
+#         self.active_set = []
+#         self.coefficients = None
+#         self.min_error_dif = min_error_dif
+#         super().__init__(n_iterations, learning_rate)
+#
+#     def fit(self, X, y):
+#         """
+#
+#         Args:
+#             X: ndarray of shape (n_samples, n_features)
+#                 Training data
+#
+#             y: ndarray of shape (n_samples, )
+#                 Target values
+#
+#         Returns: self
+#
+#         """
+#         # Insert constant ones for bias weights
+#         X = np.insert(X, 0, 1, axis=1)
+#         self.training_errors = []
+#         n_features = X.shape[1]
+#         self.initialize_weights(n_features=n_features)
+#
+#         # Initialize the active set
+#         self.active_set = []
+#         self.coefficients = np.zeros(n_features)
+#
+#         # Loop over the number of iterations
+#         for i in range(self.n_iterations):
+#             # Calculate the correlations between the features and the residuals
+#             correlations = X.T.dot(y - X.dot(self.coefficients))
+#
+#             # Find the features with the maximum absolute correlation
+#             j = np.argmax(np.abs(correlations))
+#             sign = np.sign(correlations[j])
+#
+#             # If the feature is not in the active set, add it to the active set
+#             if j not in self.active_set:
+#                 self.active_set.append(j)
+#
+#             # Calculate the current angle between the residual and the feature
+#             X_active = X[:, self.active_set]
+#
+#             # projection = X_active.dot(np.linalg.inv(X_active.T.dot(X_active))).dot(X_active.T).dot(y)
+#             # Calculate the Cholesky decomposition of X_active.T.dot(X_active)
+#             L = np.linalg.cholesky(X_active.T.dot(X_active))
+#             # Solve for the inverse of X_active.T.dot(X_active) using the Cholesky decomposition
+#             inv_XTX = np.linalg.solve(L.T, np.linalg.solve(L, np.eye(X_active.shape[1])))
+#             # Compute the projection matrix using the inverse of X_active.T.dot(X_active)
+#             projection = X_active.dot(inv_XTX).dot(X_active.T).dot(y)
+#
+#             residual = y - projection
+#             angles = X.T.dot(residual)
+#             current_angle = np.abs(angles[j])
+#
+#             # Calculate the step size and update the coefficients
+#             step_size = self.learning_rate / n_features * sign
+#             self.coefficients[self.active_set] += step_size
+#
+#             # Update the training error
+#             y_pred = X.dot(self.coefficients)
+#             mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.coefficients))
+#             self.training_errors.append(mse)
+#
+#             # Check for minimum improvement in training error
+#             if len(self.training_errors) > 0:
+#                 error_dif = self.training_errors[-2] - mse
+#                 if error_dif < self.min_error_dif:
+#                     break
+#
+#             # If the angle between the residual and the feature is small, remove the feature from the active set
+#             if current_angle < 1e-15:
+#                 self.active_set.remove(j)
+#                 self.coefficients[j] = 0
+#                 if len(self.active_set) == 0:
+#                     break
+#
+#
+# class OMP(Regression):
+#     """
+#     Orthogonal Matching Pursuit (OMP) algorithm.
+#     """
+#
+#     def __init__(self, n_iterations=3000, learning_rate=0.01, n_nonzero_coefs=10):
+#         """
+#         Args:
+#             n_iterations: float
+#                 The number of training iterations the algorithm will tune the weights for.
+#
+#             learning_rate: float
+#                 The step length that will be used when updating the weights.
+#
+#             n_nonzero_coefs: float
+#                 The number of non-zero coefficients that will be used to fit the model
+#         """
+#         self.n_nonzero_coefs = n_nonzero_coefs
+#         super().__init__(n_iterations, learning_rate)
+#
+#     def fit(self, X, y):
+#         """
+#         Args:
+#             X: ndarray of shape (n_samples, n_features)
+#                 Training data
+#
+#             y: ndarray of shape (n_samples, )
+#                 Target values
+#
+#         Returns: self
+#         """
+#         # Insert constant ones for bias weights
+#         X = np.insert(X, 0, 1, axis=1)
+#         self.training_errors = []
+#         n_features = X.shape[1]
+#         self.initialize_weights(n_features=n_features)
+#
+#         # OMP algorithm
+#         residual = y.copy()
+#         support = set()
+#         coefficients = np.zeros(n_features)
+#         for i in range(self.n_nonzero_coefs):
+#             correlations = np.abs(X.T.dot(residual))
+#             j = np.argmax(correlations)
+#             support.add(j)
+#             X_s = X[:, list(support)]
+#             coef_s = np.linalg.inv(X_s.T.dot(X_s)).dot(X_s.T).dot(y)
+#             coefficients[list(support)] = coef_s
+#
+#             # Update residual
+#             residual = y - X[:, list(support)].dot(coef_s)
+#
+#             # Calculate L2 loss w.r.t. w
+#             mse = np.mean(0.5 * (y - X.dot(coefficients)) ** 2 + self.regularization(coefficients))
+#             self.training_errors.append(mse)
+#
+#         self.w = coefficients
 
 
 class PolynomialRegression(Regression):
