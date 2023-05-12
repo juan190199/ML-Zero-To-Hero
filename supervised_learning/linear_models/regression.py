@@ -58,8 +58,9 @@ class Regression(object):
     variables X.
 
     """
+    allowed_methods = []
 
-    def __init__(self, n_iterations=1000, learning_rate=0.01, tol=1e-4, method='gd'):
+    def __init__(self, n_iterations=1000, learning_rate=0.01, tol=1e-4, method='gradient_descent'):
         """
 
         :param n_iterations: float
@@ -76,6 +77,9 @@ class Regression(object):
         self.n_iterations = n_iterations
         self.learning_rate = learning_rate
         self.tol = tol
+
+        if method not in self.allowed_methods:
+            raise ValueError('Method not supported.')
         self.method = method
 
     def initialize_weights(self, n_features, scale=1):
@@ -93,7 +97,7 @@ class Regression(object):
         # self.w = np.random.normal(loc=0, scale=scale,  size=(n_features, ))
         self.w = np.random.uniform(-limit, limit, size=(n_features,))
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weight=None):
         """
 
         :param X: ndarray of shape (n_samples, n_features)
@@ -104,17 +108,25 @@ class Regression(object):
 
         :return: self
         """
+        # Preprocess data
+        X = normalize(X)
         # Insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
+        sample_weight = make_diagonal(np.ones(X.shape[0])) if sample_weight is None else make_diagonal(sample_weight)
+
         self.training_errors = []
         self.initialize_weights(n_features=X.shape[1])
 
-        if self.method == 'gd':
-            self.gradient_descent(X, y)
-        elif self.method == 'cd':
+        if self.method == 'normal_equations':
+            self.normal_equations(X, y, sample_weight=sample_weight)
+        elif self.method == 'gradient_descent':
+            self.gradient_descent(np.sqrt(sample_weight).dot(X), np.sqrt(sample_weight).dot(y))
+        elif self.method == 'coordinate descent':
             self.coordinate_descent(X, y)
-        else:
-            raise ValueError('Method not supported.')
+        elif self.method == 'lar':
+            self.lar(X, y)
+        elif self.method == 'omp':
+            self.omp(X, y)
 
     def predict(self, X):
         """
@@ -157,6 +169,12 @@ class Regression(object):
             # Check convergence criterion
             if np.max(np.abs(grad_w)) < self.tol:
                 break
+
+    def normal_equations(self, X, y, sample_weight):
+        U, S, V = np.linalg.svd(X.T.dot(sample_weight).dot(X) + self.regularization(self.w) * np.identity(X.shape[1]))
+        S = np.diag(S)
+        X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
+        self.w = X_sq_reg_inv.dot(X.T).dot(sample_weight).dot(y)
 
     def coordinate_descent(self, X, y):
         """
@@ -211,7 +229,7 @@ class LinearRegression(Regression):
     Linear model.
     """
 
-    def __init__(self, n_iterations=100, learning_rate=0.001, gradient_descent=True):
+    def __init__(self, n_iterations=100, learning_rate=0.001, method='gradient_descent'):
         """
 
         :param n_iterations: float
@@ -220,49 +238,34 @@ class LinearRegression(Regression):
         :param learning_rate: float
             The step length that will be used when updating the weights.
 
-        :param gradient_descent: boolean
-            True or false depending on if gradient descent should be used when training.
-            If false then we use batch optimization by least squares.
+        :param method:
 
         :return: self
         """
-        self.gradient_descent = gradient_descent
+        self.allowed_methods = ["normal_equations", "gradient_descent", "lar", "omp"]
+        self.method = method
+
         # No regularization
         self.regularization = lambda x: 0
         self.regularization.grad = lambda x: 0
-        super(LinearRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
-    def fit(self, X, y, sample_weights=None):
+        super(LinearRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
+
+    def fit(self, X, y, sample_weight=None):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
+        Args:
+            X:
+            y:
+            sample_weight:
+                If None, then samples are equally weighted. Otherwise, sample_weight is used to weight the observations.
+                Common choice of sample weights is exp(-(x^{(i)} - x)^2 / 2 * tau^2), where x is the input for which
+                the prediction is to be made.
 
-        :param y: ndarray of shape (n_samples, )
-            Target values
+        Returns:
 
-        :param sample_weights: array_like of shape (n_samples, )
-            If None, then samples are equally weighted. Otherwise, sample_weight is used
-            to weight the observations.
-            Common choice of sample weights is exp(-(x^{(i)} - x)^2 / 2 * tau^2), where x is the input for which
-            the prediction is to be made.
-
-        :return: self
         """
-        sample_weights = make_diagonal(np.ones(X.shape[0])) if sample_weights is None else make_diagonal(sample_weights)
-        # If not gradient descent => Normal equations
-        if not self.gradient_descent:
-            # Insert constant ones for bias weights
-            X = np.insert(X, 0, 1, axis=1)
-            # Calculate weights by least squares (using Moore-Penrose pseudo-inverse)
-            U, S, V = np.linalg.svd(X.T.dot(sample_weights).dot(X))
-            S = np.diag(S)
-            X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
-            # Calculate weights by normal equation
-            self.w = X_sq_reg_inv.dot(X.T).dot(sample_weights).dot(y)
-
-        else:
-            super(LinearRegression, self).fit(np.sqrt(sample_weights).dot(X), np.sqrt(sample_weights).dot(y))
+        super(LinearRegression, self).fit(X, y, sample_weight)
 
 
 class RidgeRegression(Regression):
@@ -272,7 +275,7 @@ class RidgeRegression(Regression):
     of the model. A large regularization factor with decreases the variance of the model.
     """
 
-    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001, gradient_descent=True):
+    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001, method="gradient_descent"):
         """
 
         :param reg_factor: float
@@ -284,12 +287,15 @@ class RidgeRegression(Regression):
         :param learning_rate: float
             The step length that will be used when updating the weights.
         """
-        self.gradient_descent = gradient_descent
+        self.allowed_methods = ["normal_equations", "gradient_descent", "coordinate_descent"]
+        self.method = method
+
         self.reg_factor = reg_factor
         self.regularization = L2_Regularization(alpha=self.reg_factor)
+
         super(RidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
-    def fit(self, X, y):
+    def fit(self, X, y, sample_weights):
         """
 
         :param X: ndarray of shape (n_samples, n_features)
@@ -300,16 +306,16 @@ class RidgeRegression(Regression):
 
         :return: self
         """
-        # If not gradient descent => Normal equations
-        if not self.gradient_descent:
-            # Insert constant ones for bias weights
-            X = np.insert(X, 0, 1, axis=1)
-            U, S, V = np.linalg.svd(X.T.dot(X) + self.regularization * np.identity(X.shape[0]))
-            S = np.diag(S)
-            X_sq_reg_inv = V.dot(np.linalg.pinv(S)).dot(U.T)
-            self.w = X_sq_reg_inv.dot(X.T).dot(y)
-        else:
-            super(RidgeRegression, self).fit(X, y)
+        if self.method == "normal_equations":
+            self.normal_equations(X, y, sample_weights)
+        elif self.method == "gradient_descent":
+            self.gradient_descent(np.sqrt(sample_weights).dot(X), np.sqrt(sample_weights).dot(y))
+        elif self.method == "lar":
+            self.LAR(X, y)
+        elif self.method == "omp":
+            self.OMP(X, y)
+
+        return self
 
 
 class LassoRegression(Regression):
@@ -319,7 +325,7 @@ class LassoRegression(Regression):
     data and the complexity of the model. A large regularization factor with decreases the variance of the model.
     """
 
-    def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01, method='cd'):
+    def __init__(self, reg_factor, degree=1, n_iterations=3000, learning_rate=0.01, method="coordinate_descent"):
         """
 
         :param degree: int
@@ -334,8 +340,12 @@ class LassoRegression(Regression):
         :param learning_rate: float
             The step length that will be used when updating the weights.
         """
+        self.allowed_methods = ["gradient_descent", "coordinate_descent"]
+        self.method = method
+
         self.degree = degree
         self.regularization = L1_Regularization(alpha=reg_factor)
+
         super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
 
     def fit(self, X, y):
@@ -350,7 +360,11 @@ class LassoRegression(Regression):
         :return: self
         """
         X = normalize(polynomial_features(X, degree=self.degree))
-        super(LassoRegression, self).fit(X, y)
+
+        if self.method == "gradient_descent":
+            self.gradient_descent(X, y)
+        elif self.method == "coordinate_descent":
+            self.coordinate_descent(X, y)
 
     def predict(self, X):
         """
@@ -371,7 +385,8 @@ class ElasticNet(Regression):
     ratio of their contributions are set with the 'l1_ratio' parameter.
     """
 
-    def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01):
+    def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01,
+                 method="gradient_descent"):
         """
 
         :param degree: int
@@ -386,9 +401,13 @@ class ElasticNet(Regression):
         :param learning_rate: float
             The step length that will be used when updating the weights.
         """
+        self.allowed_methods = ["gradient_descent", "coordinate_descent"]
+        self.method = method
+
         self.degree = degree
         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
-        super(ElasticNet, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+
+        super(ElasticNet, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
 
     def fit(self, X, y):
         """
@@ -402,7 +421,11 @@ class ElasticNet(Regression):
         :return: self
         """
         X = normalize(polynomial_features(X, degree=self.degree))
-        super(ElasticNet, self).fit(X, y)
+
+        if self.method == "gradient_descent":
+            self.gradient_descent(X, y)
+        elif self.method == "coordinate_descent":
+            self.coordinate_descent(X, y)
 
     def predict(self, X):
         """
@@ -418,9 +441,6 @@ class ElasticNet(Regression):
 
 
 class LARS(Regression):
-    """
-    Linear Approximate RANSAC (LARS) algorithm.
-    """
 
     def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
         """
