@@ -122,7 +122,7 @@ class Regression(object):
         elif self.method == 'gradient_descent':
             self.gradient_descent(np.sqrt(sample_weight).dot(X), np.sqrt(sample_weight).dot(y))
         elif self.method == 'coordinate descent':
-            self.coordinate_descent(X, y)
+            self.coordinate_descent(np.sqrt(sample_weight).dot(X), np.sqrt(sample_weight).dot(y))
         elif self.method == 'lar':
             self.lar(X, y)
         elif self.method == 'omp':
@@ -242,7 +242,7 @@ class LinearRegression(Regression):
 
         :return: self
         """
-        self.allowed_methods = ["normal_equations", "gradient_descent", "lar", "omp"]
+        self.allowed_methods = ["normal_equations", "gradient_descent"]
         self.method = method
 
         # No regularization
@@ -278,14 +278,11 @@ class RidgeRegression(Regression):
     def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001, method="gradient_descent"):
         """
 
-        :param reg_factor: float
-            The factor that will determine the amount of regularization and feature shrinkage.
-
-        :param n_iterations: float
-            The number of training iterations the algorithm will tune the weights for.
-
-        :param learning_rate: float
-            The step length that will be used when updating the weights.
+        Args:
+            reg_factor:
+            n_iterations:
+            learning_rate:
+            method:
         """
         self.allowed_methods = ["normal_equations", "gradient_descent", "coordinate_descent"]
         self.method = method
@@ -331,7 +328,7 @@ class LassoRegression(Regression):
         :param learning_rate: float
             The step length that will be used when updating the weights.
         """
-        self.allowed_methods = ["gradient_descent", "coordinate_descent"]
+        self.allowed_methods = ["coordinate_descent", "lar", "omp"]
         self.method = method
 
         self.degree = degree
@@ -373,22 +370,18 @@ class ElasticNet(Regression):
     """
 
     def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01,
-                 method="gradient_descent"):
+                 method="coordinate_descent"):
         """
 
-        :param degree: int
-            The degree of the polynomial that the independent variable X will be transformed to.
-
-        :param reg_factor: float
-             The factor that will determine the amount of regularization and feature shrinkage.
-
-        :param n_iterations: float
-            The number of training iterations the algorithm will tune the weights for.
-
-        :param learning_rate: float
-            The step length that will be used when updating the weights.
+        Args:
+            degree:
+            reg_factor:
+            l1_ratio:
+            n_iterations:
+            learning_rate:
+            method:
         """
-        self.allowed_methods = ["gradient_descent", "coordinate_descent"]
+        self.allowed_methods = ["coordinate_descent"]
         self.method = method
 
         self.degree = degree
