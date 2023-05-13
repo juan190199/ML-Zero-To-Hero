@@ -2,8 +2,8 @@ import math
 import numpy as np
 
 from utils.data_manipulation import (normalize, polynomial_features, make_diagonal)
-from utils.data_operation import rescale_data
-from utils.data_operation import calculate_covariance_matrix
+from utils.data_operation import (rescale_data, soft_thresholding_operator)
+from utils.data_operation import (calculate_covariance_matrix)
 
 
 class L1_Regularization():
@@ -205,25 +205,18 @@ class Regression(object):
                 w_except_j = w_old[np.arange(w_old.shape[0]) != j]
                 X_except_j = X[:, np.arange(X.shape[1]) != j]
 
-                # Calculate the partial derivative of the objective function w.r.t. the j-th coordinate of the weight vector.
+                # Calculate the partial derivative of the objective function w.r.t. the j-th coordinate of the weight
+                # vector.
                 rho_j = X[:, j].dot(y - w_except_j.dot(X_except_j))
 
                 # Update the j-th coordinate of the weight vector
-                self.w[j] = self.soft_thresholding_operator(rho_j, self.regularization.alpha / 2)
+                self.w[j] = soft_thresholding_operator(rho_j, self.regularization.alpha / 2)
 
                 if self.w[j] != w_j_old:
                     y_pred += X[:, j] * (self.w[j] - w_j_old)
 
             if np.linalg.norm(self.w - w_old) < self.tol:
                 break
-
-    def soft_thresholding_operator(self, x, lambda_):
-        if x > 0 and lambda_ < abs(x):
-            return x - lambda_
-        elif x < 0 and lambda_ < abs(x):
-            return x + lambda_
-        else:
-            return 0.0
 
 
 class LinearRegression(Regression):
