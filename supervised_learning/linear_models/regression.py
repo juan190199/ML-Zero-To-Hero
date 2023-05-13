@@ -58,7 +58,7 @@ class Regression(object):
     variables X.
 
     """
-    allowed_methods = []
+    allowed_solvers = []
 
     def __init__(self, max_iterations=1000, learning_rate=0.01, tol=1e-4, solver='gradient_descent'):
         """
@@ -78,7 +78,7 @@ class Regression(object):
         self.learning_rate = learning_rate
         self.tol = tol
 
-        if solver not in self.allowed_methods:
+        if solver not in self.allowed_solvers:
             raise ValueError('`Solver not supported.')
         self.solver = solver
 
@@ -302,7 +302,7 @@ class LinearRegression(Regression):
             learning_rate:
             solver:
         """
-        self.allowed_methods = ["normal_equations", "gradient_descent", "coordinate descent"]
+        self.allowed_solvers = ["normal_equations", "gradient_descent", "coordinate descent"]
         self.solver = solver
 
         self.degree = 1
@@ -346,7 +346,7 @@ class RidgeRegression(Regression):
             learning_rate:
             solver:
         """
-        self.allowed_methods = ["normal_equations", "gradient_descent", "coordinate_descent"]
+        self.allowed_solvers = ["normal_equations", "gradient_descent", "coordinate_descent"]
         self.solver = solver
 
         self.degree = 1
@@ -392,7 +392,7 @@ class LassoRegression(Regression):
         :param learning_rate: float
             The step length that will be used when updating the weights.
         """
-        self.allowed_methods = ["coordinate_descent", "lar", "omp"]
+        self.allowed_solvers = ["coordinate_descent", "lar", "omp"]
         self.solver = solver
 
         self.degree = degree
@@ -445,7 +445,7 @@ class ElasticNet(Regression):
             max_iterations:
             learning_rate:
         """
-        self.allowed_methods = ["coordinate_descent"]
+        self.allowed_solvers = ["coordinate_descent"]
         self.solver = "coordinate_descent"
 
         self.degree = degree
@@ -642,7 +642,7 @@ class PolynomialRegression(Regression):
 
     """
 
-    def __init__(self, degree, max_iterations=3000, learning_rate=0.001):
+    def __init__(self, degree, max_iterations=3000, learning_rate=0.001, solver='gradient_descent'):
         """
 
         Args:
@@ -650,6 +650,9 @@ class PolynomialRegression(Regression):
             max_iterations:
             learning_rate:
         """
+        self.allowed_solvers = ["normal_equations", "gradient_descent", "coordinate descent"]
+        self.solver = solver
+        
         self.degree = degree
 
         # No regularization
