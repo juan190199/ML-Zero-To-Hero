@@ -60,10 +60,10 @@ class Regression(object):
     """
     allowed_methods = []
 
-    def __init__(self, n_iterations=1000, learning_rate=0.01, tol=1e-4, method='gradient_descent'):
+    def __init__(self, max_iterations=1000, learning_rate=0.01, tol=1e-4, solver='gradient_descent'):
         """
 
-        :param n_iterations: float
+        :param max_iterations: float
             The number of training iterations the algorithm will tune the weights for.
 
         :param learning_rate: float
@@ -71,16 +71,16 @@ class Regression(object):
 
         :param tol: float
 
-        :param method: str
+        :param solver: str
 
         """
-        self.n_iterations = n_iterations
+        self.max_iterations = max_iterations
         self.learning_rate = learning_rate
         self.tol = tol
 
-        if method not in self.allowed_methods:
-            raise ValueError('Method not supported.')
-        self.method = method
+        if solver not in self.allowed_methods:
+            raise ValueError('`Solver not supported.')
+        self.solver = solver
 
     def initialize_weights(self, n_features, scale=1):
         """
@@ -109,7 +109,7 @@ class Regression(object):
 
         """
         # Preprocess data
-        X = normalize(X)
+        X = normalize(polynomial_features(X, degree=self.degree))
         # Insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
         sample_weight = make_diagonal(np.ones(X.shape[0])) if sample_weight is None else make_diagonal(sample_weight)
@@ -117,15 +117,15 @@ class Regression(object):
         self.training_errors = []
         self.initialize_weights(n_features=X.shape[1])
 
-        if self.method == 'normal_equations':
+        if self.solver == 'normal_equations':
             self.normal_equations(X, y, sample_weight=sample_weight)
-        elif self.method == 'gradient_descent':
+        elif self.solver == 'gradient_descent':
             self.gradient_descent(np.sqrt(sample_weight).dot(X), np.sqrt(sample_weight).dot(y))
-        elif self.method == 'coordinate descent':
+        elif self.solver == 'coordinate descent':
             self.coordinate_descent(np.sqrt(sample_weight).dot(X), np.sqrt(sample_weight).dot(y))
-        elif self.method == 'lar':
+        elif self.solver == 'lar':
             self.lar(X, y)
-        elif self.method == 'omp':
+        elif self.solver == 'omp':
             self.omp(X, y)
 
     def predict(self, X):
@@ -137,6 +137,8 @@ class Regression(object):
         :return: ndarray of shape (n_samples, )
             Predicted values
         """
+        # Preprocess data
+        X = normalize(polynomial_features(X, degree=self.degree))
         # Insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
         y_pred = X.dot(self.w)
@@ -156,7 +158,7 @@ class Regression(object):
         Returns: self
 
         """
-        for i in range(self.n_iterations):
+        for i in range(self.max_iterations):
             y_pred = X.dot(self.w)
             # Calculate L2 loss w.r.t. w
             mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
@@ -190,7 +192,7 @@ class Regression(object):
         Returns: self
 
         """
-        for i in range(self.n_iterations):
+        for i in range(self.max_iterations):
             # Store old weights for convergence check:
             w_old = self.w.copy()
 
@@ -223,33 +225,93 @@ class Regression(object):
         else:
             return 0.0
 
+    def lar(self, X, y):
+        """
 
+        Args:
+            X:
+            y:
+
+        Returns:
+
+        """
+        n_features = X.shape[1]
+        active_set = []
+        # Loop over the number of iterations
+        for i in range(self.max_iterations):
+            # Calculate correlations between the features and the residuals
+            correlations = X.T.dot(y - X.dot(self.w))
+
+            # Find the feature with the maximum absolute correlation
+            j = np.argmax(np.abs(correlations))
+            sign = np.sign(correlations[j])
+
+            # If the feature is not in the active set, add it to the active set
+            if j not in active_set:
+                active_set.append(j)
+
+            # Calculate the current angle between the residual and the feature
+            X_active = X[:, active_set]
+
+            # projection = X_active.dot(np.linalg.inv(X_active.T.dot(X_active))).dot(X_active.T).dot(y)
+            
+            # Calculate the Cholesky decomposition of X_active.dot(X_active.T).dot(y)
+            L = np.linalg.cholesky(X_active.T.dot(X_active))
+            # Solve for the inverse of X_active.T.dot(X_active) using the Cholesky decomposition
+            inv_XTX = np.linalg.solve(L.T, np.linalg.solve(L, np.eye(X_active.shape[1])))
+            # Compute the projection matrix using the inverse of X_active.T.dot(X_active)
+            projection = X_active.dot(inv_XTX).dot(X_active.T).dot(y)
+            
+            residual = y - projection
+            angles = X.T.dot(residual)
+            current_angle = np.abs(angles[j])
+            
+            # Calculate the step size and update the weight vector
+            step_size = self.learning_rate / n_features * sign
+            self.w[active_set] += step_size
+
+            # Update the training error
+            y_pred = X.dot(self.w)
+            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
+            self.training_errors.append(mse)
+
+            # Check for minimum improvement in training error
+            if len(self.training_errors) > 0:
+                error_dif = self.training_errors[-2] - mse
+                if error_dif < self.min_error_dif:
+                    break
+
+            # If the angle between the residual and the feature is small, remove the feature from the active set
+            if current_angle < 1e-15:
+                active_set.remove(j)
+                self.w[j] = 0
+                if len(active_set) == 0:
+                    break
+            
+            
 class LinearRegression(Regression):
     """
-    Linear model.
+
     """
 
-    def __init__(self, n_iterations=100, learning_rate=0.001, method='gradient_descent'):
+    def __init__(self, max_iterations=100, learning_rate=0.001, solver='gradient_descent'):
         """
 
-        :param n_iterations: float
-            The number of training iterations the algorithm will tune the weights for.
-
-        :param learning_rate: float
-            The step length that will be used when updating the weights.
-
-        :param method:
-
-        :return: self
+        Args:
+            max_iterations:
+            learning_rate:
+            solver:
         """
-        self.allowed_methods = ["normal_equations", "gradient_descent"]
-        self.method = method
+        self.allowed_methods = ["normal_equations", "gradient_descent", "coordinate descent"]
+        self.solver = solver
+
+        self.degree = 1
 
         # No regularization
         self.regularization = lambda x: 0
         self.regularization.grad = lambda x: 0
 
-        super(LinearRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
+        super(LinearRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate, solver=solver)
 
     def fit(self, X, y, sample_weight=None):
         """
@@ -275,22 +337,24 @@ class RidgeRegression(Regression):
     of the model. A large regularization factor with decreases the variance of the model.
     """
 
-    def __init__(self, reg_factor, n_iterations=1000, learning_rate=0.001, method="gradient_descent"):
+    def __init__(self, reg_factor, max_iterations=1000, learning_rate=0.001, solver="gradient_descent"):
         """
 
         Args:
             reg_factor:
-            n_iterations:
+            max_iterations:
             learning_rate:
-            method:
+            solver:
         """
         self.allowed_methods = ["normal_equations", "gradient_descent", "coordinate_descent"]
-        self.method = method
+        self.solver = solver
+
+        self.degree = 1
 
         self.reg_factor = reg_factor
         self.regularization = L2_Regularization(alpha=self.reg_factor)
 
-        super(RidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
+        super(RidgeRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate)
 
     def fit(self, X, y, sample_weights=None):
         """
@@ -313,7 +377,7 @@ class LassoRegression(Regression):
     data and the complexity of the model. A large regularization factor with decreases the variance of the model.
     """
 
-    def __init__(self, reg_factor, degree=1, n_iterations=3000, learning_rate=0.01, method="coordinate_descent"):
+    def __init__(self, reg_factor, degree=1, max_iterations=3000, learning_rate=0.01, solver="coordinate_descent"):
         """
 
         :param degree: int
@@ -322,19 +386,21 @@ class LassoRegression(Regression):
         :param reg_factor: float
              The factor that will determine the amount of regularization and feature shrinkage.
 
-        :param n_iterations: float
+        :param max_iterations: float
             The number of training iterations the algorithm will tune the weights for.
 
         :param learning_rate: float
             The step length that will be used when updating the weights.
         """
         self.allowed_methods = ["coordinate_descent", "lar", "omp"]
-        self.method = method
+        self.solver = solver
+
+        self.degree = degree
 
         self.degree = degree
         self.regularization = L1_Regularization(alpha=reg_factor)
 
-        super(LassoRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
+        super(LassoRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate, solver=solver)
 
     def fit(self, X, y, sample_weight=None):
         """
@@ -369,25 +435,23 @@ class ElasticNet(Regression):
     ratio of their contributions are set with the 'l1_ratio' parameter.
     """
 
-    def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01,
-                 method="coordinate_descent"):
+    def __init__(self, degree=1, reg_factor=0.05, l1_ratio=0.5, max_iterations=3000, learning_rate=0.01):
         """
 
         Args:
             degree:
             reg_factor:
             l1_ratio:
-            n_iterations:
+            max_iterations:
             learning_rate:
-            method:
         """
         self.allowed_methods = ["coordinate_descent"]
-        self.method = method
+        self.solver = "coordinate_descent"
 
         self.degree = degree
         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
 
-        super(ElasticNet, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate, method=method)
+        super(ElasticNet, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate, solver=solver)
 
     def fit(self, X, y, sample_weight=None):
         """
@@ -400,87 +464,85 @@ class ElasticNet(Regression):
         Returns:
 
         """
-        X = normalize(polynomial_features(X, degree=self.degree))
         super(ElasticNet, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Test data
+        Args:
+            X:
 
-        :return: ndarray of shape (n_samples, )
-            Predicted values
+        Returns:
+
         """
-        X = normalize(polynomial_features(X, degree=self.degree))
         return super(ElasticNet, self).predict(X)
 
 
 # class LARS(Regression):
-#
-#     def __init__(self, reg_factor=0.05, l1_ratio=0.5, n_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
+# 
+#     def __init__(self, reg_factor=0.05, l1_ratio=0.5, max_iterations=3000, learning_rate=0.01, min_error_dif=1e-6):
 #         """
-#
+# 
 #         Args:
 #             reg_factor: float
 #                 The factor that will determine the amount of regularization and feature shrinkage.
-#
+# 
 #             l1_ratio:
-#             n_iterations: float
+#             max_iterations: float
 #                 The number of training iterations the algorithm will tune the weights for.
-#
+# 
 #             learning_rate: float
 #                 The step length that will be used when updating the weights.
-#
+# 
 #             min_error_dif: float
 #                 The minimum difference between the current error and the previous error to continue the algorithm.
-#
+# 
 #         """
 #         self.regularization = L1_L2_Regularization(alpha=reg_factor, l1_ratio=l1_ratio)
 #         self.active_set = []
 #         self.coefficients = None
 #         self.min_error_dif = min_error_dif
-#         super().__init__(n_iterations, learning_rate)
-#
+#         super().__init__(max_iterations, learning_rate)
+# 
 #     def fit(self, X, y):
 #         """
-#
+# 
 #         Args:
 #             X: ndarray of shape (n_samples, n_features)
 #                 Training data
-#
+# 
 #             y: ndarray of shape (n_samples, )
 #                 Target values
-#
+# 
 #         Returns: self
-#
+# 
 #         """
 #         # Insert constant ones for bias weights
 #         X = np.insert(X, 0, 1, axis=1)
 #         self.training_errors = []
 #         n_features = X.shape[1]
 #         self.initialize_weights(n_features=n_features)
-#
+# 
 #         # Initialize the active set
 #         self.active_set = []
 #         self.coefficients = np.zeros(n_features)
-#
+# 
 #         # Loop over the number of iterations
-#         for i in range(self.n_iterations):
+#         for i in range(self.max_iterations):
 #             # Calculate the correlations between the features and the residuals
 #             correlations = X.T.dot(y - X.dot(self.coefficients))
-#
+# 
 #             # Find the features with the maximum absolute correlation
 #             j = np.argmax(np.abs(correlations))
 #             sign = np.sign(correlations[j])
-#
+# 
 #             # If the feature is not in the active set, add it to the active set
 #             if j not in self.active_set:
 #                 self.active_set.append(j)
-#
+# 
 #             # Calculate the current angle between the residual and the feature
 #             X_active = X[:, self.active_set]
-#
+# 
 #             # projection = X_active.dot(np.linalg.inv(X_active.T.dot(X_active))).dot(X_active.T).dot(y)
 #             # Calculate the Cholesky decomposition of X_active.T.dot(X_active)
 #             L = np.linalg.cholesky(X_active.T.dot(X_active))
@@ -488,43 +550,43 @@ class ElasticNet(Regression):
 #             inv_XTX = np.linalg.solve(L.T, np.linalg.solve(L, np.eye(X_active.shape[1])))
 #             # Compute the projection matrix using the inverse of X_active.T.dot(X_active)
 #             projection = X_active.dot(inv_XTX).dot(X_active.T).dot(y)
-#
+# 
 #             residual = y - projection
 #             angles = X.T.dot(residual)
 #             current_angle = np.abs(angles[j])
-#
+# 
 #             # Calculate the step size and update the coefficients
 #             step_size = self.learning_rate / n_features * sign
 #             self.coefficients[self.active_set] += step_size
-#
+# 
 #             # Update the training error
 #             y_pred = X.dot(self.coefficients)
 #             mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.coefficients))
 #             self.training_errors.append(mse)
-#
+# 
 #             # Check for minimum improvement in training error
 #             if len(self.training_errors) > 0:
 #                 error_dif = self.training_errors[-2] - mse
 #                 if error_dif < self.min_error_dif:
 #                     break
-#
+# 
 #             # If the angle between the residual and the feature is small, remove the feature from the active set
 #             if current_angle < 1e-15:
 #                 self.active_set.remove(j)
 #                 self.coefficients[j] = 0
 #                 if len(self.active_set) == 0:
 #                     break
-#
+
 #
 # class OMP(Regression):
 #     """
 #     Orthogonal Matching Pursuit (OMP) algorithm.
 #     """
 #
-#     def __init__(self, n_iterations=3000, learning_rate=0.01, n_nonzero_coefs=10):
+#     def __init__(self, max_iterations=3000, learning_rate=0.01, n_nonzero_coefs=10):
 #         """
 #         Args:
-#             n_iterations: float
+#             max_iterations: float
 #                 The number of training iterations the algorithm will tune the weights for.
 #
 #             learning_rate: float
@@ -534,7 +596,7 @@ class ElasticNet(Regression):
 #                 The number of non-zero coefficients that will be used to fit the model
 #         """
 #         self.n_nonzero_coefs = n_nonzero_coefs
-#         super().__init__(n_iterations, learning_rate)
+#         super().__init__(max_iterations, learning_rate)
 #
 #     def fit(self, X, y):
 #         """
@@ -577,97 +639,86 @@ class ElasticNet(Regression):
 
 class PolynomialRegression(Regression):
     """
-    Performs a non-linear transformation of the data before fitting the model
-    and doing predictions which allows for doing non-linear regression.
+
     """
 
-    def __init__(self, degree, n_iterations=3000, learning_rate=0.001):
+    def __init__(self, degree, max_iterations=3000, learning_rate=0.001):
         """
 
-        :param degree: int
-            The degree of the polynomial that the independent variable X will be transformed to.
-
-        :param n_iterations: float
-            The number of training iterations the algorithm will tune the weights for.
-
-        :param learning_rate: float
-            The step length that will be used when updating the weights.
+        Args:
+            degree:
+            max_iterations:
+            learning_rate:
         """
         self.degree = degree
+
         # No regularization
         self.regularization = lambda x: 0
         self.regularization.grad = lambda x: 0
-        super(PolynomialRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
-    def fit(self, X, y):
+        super(PolynomialRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y, sample_weight=None):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
+        Args:
+            X:
+            y:
+            sample_weight:
 
-        :param y: ndarray of shape (n_samples, )
-            Target values
+        Returns:
 
-        :return: self
         """
-        X = polynomial_features(X, degree=self.degree)
-        super(PolynomialRegression, self).fit(X, y)
+        super(PolynomialRegression, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Test data
+        Args:
+            X:
 
-        :return: ndarray of shape (n_samples, )
-            Predicted values
+        Returns:
+
         """
-        X = polynomial_features(X, degree=self.degree)
         return super(PolynomialRegression, self).predict(X)
 
 
 class PolynomialRidgeRegression(Regression):
     """
-    Similar to regular ridge regression except that the data is transformed to allow
-    for polynomial regression.
+
     """
 
-    def __init__(self, degree, reg_factor, n_iterations=3000, learning_rate=0.01, gradient_descent=True):
+    def __init__(self, degree, reg_factor, max_iterations=3000, learning_rate=0.01, solver='gradient_descent'):
         """
 
-        :param degree: int
-            The degree of the polynomial that the independent variable X will be transformed to.
-
-        :param reg_factor: float
-             The factor that will determine the amount of regularization and feature shrinkage.
-
-        :param n_iterations: float
-            The number of training iterations the algorithm will tune the weights for.
-
-        :param learning_rate: float
-            The step length that will be used when updating the weights.
-
-        :param gradient_descent: boolean
-            True or false depending on if gradient descent should be used when training.
-            If false then we use batch optimization by least squares.
+        Args:
+            degree:
+            reg_factor:
+            max_iterations:
+            learning_rate:
+            solver:
         """
+        self.allowed_solvers = ["normal_equations", "gradient_descent", "coordinate descent"]
+        self.solver = solver
+
         self.degree = degree
+
         self.regularization = L2_Regularization(alpha=reg_factor)
-        super(PolynomialRidgeRegression, self).__init__(n_iterations=n_iterations, learning_rate=learning_rate)
 
-    def fit(self, X, y):
+        super(PolynomialRidgeRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate)
+
+    def fit(self, X, y, sample_weight=None):
         """
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
+        Args:
+            X:
+            y:
+            sample_weight:
 
-        :param y: ndarray of shape (n_samples, )
-            Target values
+        Returns:
 
-        :return: self
         """
-        X = normalize(polynomial_features(X, degree=self.degree))
-        super(PolynomialRidgeRegression, self).fit(X, y)
+        super(PolynomialRidgeRegression, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
         """
@@ -678,5 +729,4 @@ class PolynomialRidgeRegression(Regression):
         :return: ndarray of shape (n_samples, )
             Predicted values
         """
-        X = normalize(polynomial_features(X, degree=self.degree))
         return super(PolynomialRidgeRegression, self).predict(X)
