@@ -1,19 +1,14 @@
 import numpy as np
 
-import progressbar
+import tqdm
 import matplotlib.pyplot as plt
 import matplotlib.cm as cmx
 import matplotlib.colors as colors
 
 from mpl_toolkits.mplot3d import Axes3D
 
-from utils.data_operation import calculate_covariance_matrix
-from utils.data_manipulation import standardize
-
-bar_widgets = [
-    'Training: ', progressbar.Percentage(), ' ', progressbar.Bar(marker='-', left='[', right=']'),
-    ' ', progressbar.ETA()
-]
+from utils.metrics import calculate_covariance_matrix
+from utils.data import standardize
 
 
 class Plot():
