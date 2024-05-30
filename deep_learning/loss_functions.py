@@ -1,6 +1,9 @@
+import sys
 import numpy as np
 
-from utils.data_operation import accuracy_score
+sys.path.append('../')
+
+from utils import accuracy_score
 
 
 class Loss(object):
