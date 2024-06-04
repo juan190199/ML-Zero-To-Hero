@@ -1,10 +1,9 @@
 import math
 import numpy as np
 
-from utils.data_manipulation import (normalize, polynomial_features, make_diagonal)
-from utils.data_operation import (rescale_data, soft_thresholding_operator)
-from utils.data_operation import (calculate_covariance_matrix)
-
+from utils.data import normalize, polynomial_features, make_diagonal, rescale_data
+from utils.metrics import calculate_covariance_matrix
+from utils.math_operations import soft_thresholding_operator
 
 class L1_Regularization():
     """
@@ -161,7 +160,7 @@ class Regression(object):
         for i in range(self.max_iterations):
             y_pred = X.dot(self.w)
             # Calculate L2 loss w.r.t. w
-            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.r54egularization(self.w))
+            mse = np.mean(0.5 * (y - y_pred) ** 2 + self.regularization(self.w))
             self.training_errors.append(mse)
             # Gradient of L2 loss w.r.t. w
             grad_w = -(y - y_pred).dot(X) + self.regularization.grad(self.w)
@@ -220,42 +219,45 @@ class Regression(object):
 
 
 class LinearRegression(Regression):
-    """
-
-    """
+    """ Linear regression model """
 
     def __init__(self, max_iterations=100, learning_rate=0.001, solver='gradient_descent'):
         """
 
         Args:
-            max_iterations:
-            learning_rate:
-            solver:
+            max_iterations: int - number of training iterations the algorithm will tune the weights for
+            learning_rate: float - step length that will be used when updating the weights
+            solver: string - solver to use for optimization
         """
         self.allowed_solvers = ["normal_equations", "gradient_descent", "coordinate descent"]
-        self.solver = solver
-
         self.degree = 1
 
         # No regularization
         self.regularization = lambda x: 0
         self.regularization.grad = lambda x: 0
 
-        super(LinearRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate,
-                                               solver=solver)
+        super(LinearRegression, self).__init__(
+            max_iterations=max_iterations,
+            learning_rate=learning_rate,
+            solver=solver
+        )
 
     def fit(self, X, y, sample_weight=None):
         """
-
+        Fit the model to the training data.
         Args:
-            X:
-            y:
-            sample_weight:
+            X: ndarray of shape (n_samples, n_features)
+                Training data.
+
+            y: ndarray of shape (n_samples, )
+                Target data
+
+            sample_weight: ndarray of shape (n_samples, ), optional (default=None)
                 If None, then samples are equally weighted. Otherwise, sample_weight is used to weight the observations.
                 Common choice of sample weights is exp(-(x^{(i)} - x)^2 / 2 * tau^2), where x is the input for which
                 the prediction is to be made.
 
-        Returns:
+        Returns: self
 
         """
         super(LinearRegression, self).fit(X, y, sample_weight)
