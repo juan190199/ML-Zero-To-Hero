@@ -22,11 +22,11 @@ The purpose of this project is to present the inner workings of the algorithms i
 ### Supervised Learning
 - #### Linear models:
   - [Ordinary least squares](supervised_learning/linear_models/regression)
-  - [Ridge regression](supervised_learning/linear_models/regression.py)
-  - [Ridge classifier](supervised_learning/linear_models/linear_classifiers.py)
-  - [Lasso](supervised_learning/linear_models/regression.py)
+  - [Ridge regression]
+  - [Ridge classifier]
+  - [Lasso]
   - [Bayesian regression]
-  - [Logistic regression]
+  - [Softmax regression](supervised_learning/linear_models/linear_classifiers.py)
   - [Generalized linear models]
   - [Stochastic gradient descent]
   - [Perceptron]
@@ -77,7 +77,7 @@ The purpose of this project is to present the inner workings of the algorithms i
 
 ### Deep Learning
 
-[//]: # (- [Neural Network]&#40;deep_learning/neural_network.py&#41;)
+- [Neural Network](deep_learning/neural_network.py)
 
 [//]: # (- [Layers]&#40;deep_learning/layers.py&#41;)
 
@@ -98,6 +98,6 @@ The purpose of this project is to present the inner workings of the algorithms i
 [//]: # (  - Zero Padding Layer)
 
 ### Examples
-- [Least squares: ordinary and weighted](examples/least_squares.ipynb)
-- [Linear classifiers: logistic regression and ridge classifier](examples/linear_classifiers.ipynb)
+- [Least squares: ordinary and weighted]
+- [Linear classifiers: logistic regression and ridge classifier]
 
