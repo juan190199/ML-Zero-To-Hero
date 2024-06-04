@@ -1,72 +1,59 @@
 import math
 import numpy as np
 
-from utils.data_manipulation import make_diagonal
-from supervised_learning.linear_models.regression import RidgeRegression
+from deep_learning import CrossEntropy
+from supervised_learning.linear_models.regression import LinearRegression, RidgeRegression
+from utils.data import make_diagonal
 from deep_learning.activation_functions import Sigmoid
 
 
-class LogisticRegression():
+class LogisticRegression(LinearRegression):
     """
-    Logistic Regression classifier
+    Logistic regression classifier
     """
 
-    def __init__(self, learning_rate=.1, gradient_descent=True):
-        """
-
-        :param learning_rate: float
-            The step length that will be taken when following the negative gradient during training.
-
-        :param gradient_descent: boolean
-            True or false depending on if gradient descent should be used when training.
-            If false then we use batch optimization by least squares.
-        """
-        self.w = None
-        self.learning_rate = learning_rate
-        self.gradient_descent = gradient_descent
+    def __init__(self, max_iterations=1000, learning_rate=0.01, tol=1e-4, solver='gradient_descent'):
+        super().__init__(max_iterations=max_iterations, learning_rate=learning_rate, solver=solver)
+        self.tol = tol
         self.sigmoid = Sigmoid()
+        self.cross_entropy = CrossEntropy()
 
-    def initialize_parameters(self, X):
-        n_features = X.shape[1]
-        # Initialize parameters between [-1/sqrt(d), 1/sqrt(d)]
-        limit = 1 / math.sqrt(n_features)
-        self.w = np.random.uniform(-limit, limit, size=(n_features,))
+    def fit(self, X, y, sample_weight=None):
+        self.initialize_weights(X.shape[1])
 
-    def fit(self, X, y, n_iterations=4000):
-        """
+        if self.solver == 'gradient_descent':
+            self.gradient_descent(X, y)
+        elif self.solver == 'newton_raphson':
+            self.newton_raphson(X, y)
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Training data
-
-        :param y: ndarray of shape (n_samples, )
-            Target data
-
-        :return: self
-        """
-        self.initialize_parameters(X)
-        # Tune parameters for n iterations
-        for i in range(n_iterations):
-            # Make a new prediction
-            y_pred = self.sigmoid(X.dot(self.w))
-            if self.gradient_descent:
-                self.w -= self.learning_rate * -(y - y_pred).dot(X)
-            else:
-                diag_gradient = make_diagonal(self.sigmoid.gradient(X.dot(self.w)))
-                # Batch optimization
-                self.w = np.linalg.pinv(X.T.dot(diag_gradient).dot(X)).dot(X.T) \
-                    .dot(diag_gradient.dot(X).dot(self.w) + y - y_pred)
+    def predict_proba(self, X):
+        return self.sigmoid(np.dot(X, self.w))
 
     def predict(self, X):
-        """
+        return np.round(self.predict_proba(X)).astype(int)
 
-        :param X: ndarray of shape (n_samples, n_features)
-            Test data
+    def gradient_descent(self, X, y):
+        for i in range(self.max_iterations):
+            y_pred = self.sigmoid(np.dot(X, self.w))
+            loss = self.cross_entropy.loss(y, y_pred)
+            grad = self.cross_entropy.gradient(y, y_pred)
 
-        :return: ndarray of shape (n_samples, )
-            Predicted values
-        """
-        y_predict = np.round(self.sigmoid(X.dot(self.w))).astype(int)
-        return y_predict
+            self.w -= self.learning_rate * np.dot(X.T, grad)
+
+            if np.linalg.norm(grad) < self.tol:
+                break
+
+    def newton_raphson(self, X, y):
+        for i in range(self.max_iterations):
+            y_pred = self.sigmoid(np.dot(X, self.w))
+            loss = self.cross_entropy.loss(y, y_pred)
+            grad = self.cross_entropy.gradient(y, y_pred)
+            diag_gradient = make_diagonal(self.sigmoid.gradient(X.dot(self.w)))
+            hessian = np.dot(X.T, np.dot(diag_gradient, X))
+            self.w -= np.linalg.inv(hessian).dot(np.dot(X.T, grad))
+
+            if np.linalg.norm(grad) < self.tol:
+                break
 
 
 class RidgeClassifier(RidgeRegression):

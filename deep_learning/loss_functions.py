@@ -25,7 +25,7 @@ class SquareLoss(Loss):
     def __init__(self):
         pass
 
-    def loss(self, y, y_pred, normalize=True):
+    def __call__(self, y, y_pred, normalize=True):
         if normalize:
             return 0.5 * np.mean(np.power((y - y_pred), 2))
         else:
@@ -46,31 +46,21 @@ class CrossEntropy(Loss):
     def __init__(self):
         pass
 
-    def loss(self, y, y_pred, normalize=True):
-
-        # Ensure y is one-hot encoded
-        if len(y.shape) == 1 or y.shape[1] == 1:
-            y = to_categorical(y)
-
-        # Avoid division by zero
-        y_pred = np.clip(y_pred, 1e-15, 1 - 1e-15)
-        sample_losses = -np.sum(y * np.log(y_pred), axis=1)
-
+    def __call__(self, y, y_pred, normalize=False):
+        eps = 1e-10
+        y_pred = np.clip(y_pred, eps, 1 - eps)
         if normalize:
-            return np.mean(sample_losses)
+            return - np.mean(y * np.log(y_pred), axis=1)
         else:
-            return np.sum(sample_losses)
+            return -np.sum(y * np.log(y_pred), axis=1)
+
+    def gradient(self, y, y_pred, normalize=False):
+        eps = 1e-10
+        y_pred = np.clip(y_pred, eps, 1 - eps)
+        if normalize:
+            return -(y - y_pred) / y.shape[0]
+        else:
+            return -(y - y_pred)
 
     def acc(self, y, y_pred):
         return accuracy_score(np.argmax(y, axis=1), np.argmax(y_pred, axis=1))
-
-    def gradient(self, y, y_pred, normalize=True):
-        # Ensure y is one-hot encoded
-        if len(y.shape) == 1 or y.shape[1] == 1:
-            y = to_categorical(y)
-
-        grad = y_pred - y
-        if normalize:
-            return grad / y.shape[0]
-        else:
-            return grad
