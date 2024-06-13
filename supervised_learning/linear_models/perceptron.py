@@ -1,12 +1,10 @@
 import math
 import numpy as np
 
-import progressbar
+from tqdm import tqdm
 
 from deep_learning.loss_functions import SquareLoss
 from deep_learning.activation_functions import Sigmoid
-
-from utils.misc import bar_widgets
 
 
 class Perceptron():
@@ -34,7 +32,6 @@ class Perceptron():
         self.learning_rate = learning_rate
         self.activation_function = activation_function()
         self.loss = loss()
-        self.progressbar = progressbar.ProgressBar(widgets=bar_widgets)
 
     def fit(self, X, y):
         """
@@ -55,7 +52,7 @@ class Perceptron():
         self.w = np.random.uniform(-limit, limit, (n_features, n_outputs))
         self.b = np.zeros((1, n_outputs))
 
-        for i in self.progressbar(range(self.n_iterations)):
+        for epoch in tqdm(range(self.n_iterations), desc='Training', unit='epoch'):
             # Calculate outputs
             linear_output = X.T.dot(self.w) + self.b
             y_pred = self.activation_function(linear_output)
