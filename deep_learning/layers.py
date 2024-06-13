@@ -299,6 +299,7 @@ class BatchNormalization(Layer):
     """
     Batch normalization
     """
+
     def __init__(self, momentum=0.99):
         self.momentum = momentum
         self.trainable = True
@@ -318,10 +319,54 @@ class BatchNormalization(Layer):
         return np.prod(self.gamma.shape) + np.prod(self.beta.shape)
 
     def forward_pass(self, X, training=True):
-        ...
+
+        if self.running_mean is None:
+            self.running_mean = np.mean(X, axis=0)
+            self.running_var = np.var(X, axis=0)
+
+        if training and self.trainable:
+            # Calculate batch statistics
+            mean = np.mean(X, axis=0)
+            var = np.var(X, axis=0)
+
+            # Update running statistics
+            self.running_mean = self.momentum * self.running_mean + (1 - self.momentum) * mean
+            self.running_var = self.momentum * self.running_var + (1 - self.momentum) * var
+        else:
+            mean = self.running_mean
+            var = self.running_var
+
+        # Normalize input
+        self.X_centered = X - mean
+        self.std_inv = 1 / np.sqrt(var + self.eps)
+        X_norm = self.X_centered * self.std_inv
+
+        # Scale and shift
+        output = self.gamma * X_norm + self.beta
+        return output
 
     def backward_pass(self, accum_grad):
-        ...
+
+        gamma = self.gamma
+
+        # Update parameters if layer is trainable
+        if self.trainable:
+            X_norm = self.X_centered * self.std_inv
+            grad_gamma = np.sum(accum_grad * X_norm, axis=0)
+            grad_beta = np.sum(accum_grad, axis=0)
+
+            self.gamma = self.gamma_opt.update(self.gamma, grad_gamma)
+            self.beta = self.beta_opt.update(self.beta, grad_beta)
+
+        batch_size = accum_grad.shape[0]
+
+        accum_grad = (1 / batch_size) * gamma * self.std_inv * (
+                batch_size * accum_grad
+                - np.sum(accum_grad, axis=0)
+                - self.X_centered * self.std_inv ** 2 * np.sum(accum_grad * self.X_centered, axis=0)
+        )
+
+        return accum_grad
 
     def output_shape(self):
         return self.input_shape
@@ -475,6 +520,7 @@ class Flatten(Layer):
     """
     Turns multi-dimensional matrix into two-dimensional
     """
+
     def __init__(self, input_shape=None):
         self.prev_shape = None
         self.trainable = True
@@ -488,7 +534,7 @@ class Flatten(Layer):
         return accum_grad.reshape(self.prev_shape)
 
     def output_shape(self):
-        return (np.prod(self.input_shape), )
+        return (np.prod(self.input_shape),)
 
 
 class RNN(Layer):
