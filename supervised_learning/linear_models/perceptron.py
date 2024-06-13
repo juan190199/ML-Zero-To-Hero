@@ -11,6 +11,7 @@ class Perceptron():
     """
     The Perceptron. One layer neural network classifier
     """
+
     def __init__(self, n_iterations=20000, activation_function=Sigmoid, loss=SquareLoss, learning_rate=0.01):
         """
 
@@ -56,11 +57,14 @@ class Perceptron():
             # Calculate outputs
             linear_output = X.T.dot(self.w) + self.b
             y_pred = self.activation_function(linear_output)
+
             # Calculate the loss gradient w.r.t. the input of the activation function
             error_gradient = self.loss.gradient(y, y_pred) * self.activation_function.gradient(linear_output)
+
             # Calculate the gradient of the loss w.r.t. each weight
             grad_wrt_w = X.T.dot(error_gradient)
             grad_wrt_b = np.sum(error_gradient, axis=0, keepdims=True)
+
             # Update weights
             self.w -= self.learning_rate * grad_wrt_w
             self.b -= self.learning_rate * grad_wrt_b
@@ -76,5 +80,3 @@ class Perceptron():
         """
         y_pred = self.activation_function(X.dot(self.w) + self.b)
         return y_pred
-
-
