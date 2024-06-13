@@ -22,14 +22,14 @@ The purpose of this project is to present the inner workings of the algorithms i
 ### Supervised Learning
 - #### Linear models:
   - [Ordinary least squares](supervised_learning/linear_models/regression)
-  - [Ridge regression]
+  - [Ridge regression](supervised_learning/linear_models/regression.py)
   - [Ridge classifier]
-  - [Lasso]
+  - [Lasso](supervised_learning/linear_models/regression.py)
   - [Bayesian regression]
   - [Softmax regression](supervised_learning/linear_models/linear_classifiers.py)
   - [Generalized linear models]
   - [Stochastic gradient descent]
-  - [Perceptron]
+  - [Perceptron](supervised_learning/linear_models/perceptron.py)
   - [Passive aggressive algorithms]
   - [Robustness regression]
   - [Quantile regression]
