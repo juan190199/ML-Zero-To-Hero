@@ -23,20 +23,32 @@ The purpose of this project is to present the inner workings of the algorithms i
 - #### Linear models:
   - [Ordinary least squares](supervised_learning/linear_models/regression)
   - [Ridge regression](supervised_learning/linear_models/regression.py)
-  - [Ridge classifier]
   - [Lasso](supervised_learning/linear_models/regression.py)
-  - [Bayesian regression]
-  - [Softmax regression](supervised_learning/linear_models/linear_classifiers.py)
-  - [Generalized linear models]
-  - [Stochastic gradient descent]
+  - [Elastic Net](supervised_learning/linear_models/regression.py)
+  - [Multi-task Lasso]()
+  - [Least Angle Regression]()
+  - [LARS Lasso]()
+  - [Orthogonal Matching Pursuit (OMP)]()
+  - [Bayesian regression]()
+  - [Softmax regression](supervised_learning/linear_models/regression.py)
+  - [Ridge Classifier](supervised_learning/linear_models/linear_classifiers.py)
+  - [Generalized linear models]()
+  - [Stochastic gradient descent]()
   - [Perceptron](supervised_learning/linear_models/perceptron.py)
-  - [Passive aggressive algorithms]
-  - [Robustness regression]
-  - [Quantile regression]
-  - [Polynomial regression]
+  - [Passive aggressive algorithms]()
+  - [Robustness regression]()
+  - [Quantile regression]()
+  - [Polynomial regression](supervised_learning/linear_models/regression.py)
 
-
-[//]: # (- [Logistic Regression]&#40;supervised_learning/linear_models/linear_classifiers.py&#41;)
+- #### Linear and Quadratic Discriminant Analysis
+- #### Kernel Ridge Regression
+- #### Support Vector Manchines
+- #### Stochastic Gradient Descent
+- #### Nearest Neighbours
+- #### Gaussian Processes
+- #### Cross Decomposition
+- #### Naive Bayes
+- #### Decision Trees
 
 [//]: # (- [Decision Forest]&#40;supervised_learning/decision_forest.py&#41;)
 
@@ -54,16 +66,11 @@ The purpose of this project is to present the inner workings of the algorithms i
 
 [//]: # (- [K Nearest Neighbors]&#40;supervised_learning/k_nearest_neighbors.py&#41;)
 
-[//]: # ()
 [//]: # (- [Linear Discriminant Analysis]&#40;supervised_learning/linear_discriminant_analysis.py&#41;)
 
-[//]: # ()
-[//]: # ()
 [//]: # (- [Multilayer Perceptron]&#40;supervised_learning/multilayer_perceptron.py&#41;)
 
 [//]: # (- [Naive Bayes]&#40;supervised_learning/naive_bayes.py&#41;)
-
-[//]: # (- [Perceptron]&#40;supervised_learning/linear_models/perceptron.py&#41;)
 
 [//]: # (- [Polynomial Regression]&#40;supervised_learning/linear_models/regression.py&#41;)
 
@@ -78,6 +85,7 @@ The purpose of this project is to present the inner workings of the algorithms i
 ### Deep Learning
 
 - [Neural Network](deep_learning/neural_network.py)
+- [Transformers]
 
 [//]: # (- [Layers]&#40;deep_learning/layers.py&#41;)
 
@@ -98,6 +106,5 @@ The purpose of this project is to present the inner workings of the algorithms i
 [//]: # (  - Zero Padding Layer)
 
 ### Examples
-- [Least squares: ordinary and weighted]
-- [Linear classifiers: logistic regression and ridge classifier]
+
 
