@@ -25,7 +25,6 @@ The purpose of this project is to present the inner workings of the algorithms i
   - [Ridge regression](supervised_learning/linear_models/regression.py)
   - [Lasso](supervised_learning/linear_models/regression.py)
   - [Elastic Net](supervised_learning/linear_models/regression.py)
-  - [Multi-task Lasso]()
   - [Least Angle Regression]()
   - [LARS Lasso]()
   - [Orthogonal Matching Pursuit (OMP)]()
