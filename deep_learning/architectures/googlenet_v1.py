@@ -73,3 +73,6 @@ class InceptionBlock(nn.Module):
     def forward(self, x):
         return torch.cat([self.branch1(x), self.branch2(x), self.branch3(x), self.branch4(x)], dim=1)
 
+
+class GoogLeNet_V1(nn.Module):
+    def __init__(self):
