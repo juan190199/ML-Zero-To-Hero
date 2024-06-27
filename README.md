@@ -84,7 +84,9 @@ The purpose of this project is to present the inner workings of the algorithms i
 ### Deep Learning
 
 - [Neural Network](deep_learning/neural_network.py)
-- [Transformers]
+- #### Architectures:
+  - [ResNet](deep_learning/architectures/resnet.py)
+  - [GoogLeNet_V1](deep_learning/architectures/googlenet_v1.py)
 
 [//]: # (- [Layers]&#40;deep_learning/layers.py&#41;)
 
@@ -103,6 +105,8 @@ The purpose of this project is to present the inner workings of the algorithms i
 [//]: # (  - Max Pooling Layer)
 
 [//]: # (  - Zero Padding Layer)
+
+
 
 ### Examples
 
