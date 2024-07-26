@@ -43,24 +43,61 @@ class SquareLoss(Loss):
 ######################################
 
 class CrossEntropy(Loss):
-    def __init__(self):
-        pass
+    def __init__(self, class_weights=None):
+        """
+
+        Args:
+            class_weights: dict or np.array
+        """
+        if isinstance(class_weights, dict):
+            self.class_weights = class_weights
+        elif isinstance(class_weights, (np.ndarray, list)):
+            self.class_weights = np.array(class_weights)
+        elif class_weights is None:
+            self.class_weights = None
+        else:
+            raise ValueError("class_weights must be a dictionary, an array, or None.")
 
     def __call__(self, y, y_pred, normalize=False):
         eps = 1e-10
         y_pred = np.clip(y_pred, eps, 1 - eps)
-        if normalize:
-            return - np.mean(y * np.log(y_pred), axis=1)
+
+        if self.class_weights is not None:
+            if isinstance(self.class_weights, dict):
+                # Convert class weights dictionary to an array
+                class_weights = np.array([self.class_weights[i] for i in np.argmax(y, axis=1)])
+            else:
+                class_weights = self.class_weights[np.argmax(y, axis=1)]
+
+            loss = -np.sum(class_weights * y * np.log(y_pred), axis=1)
         else:
-            return -np.sum(y * np.log(y_pred), axis=1)
+            loss = -np.sum(y * np.log(y_pred), axis=1)
+
+        if normalize:
+            return np.mean(loss)
+        else:
+            return np.sum(loss)
 
     def gradient(self, y, y_pred, normalize=False):
         eps = 1e-10
         y_pred = np.clip(y_pred, eps, 1 - eps)
-        if normalize:
-            return -(y - y_pred) / y.shape[0]
+
+        if self.class_weights is not None:
+            if isinstance(self.class_weights, dict):
+                # Convert class weights dictionary to an array
+                class_weights = np.array([self.class_weights[i] for i in np.argmax(y, axis=1)])
+            else:
+                class_weights = self.class_weights[np.argmax(y, axis=1)]
+
+            # Calculate weighted gradient
+            gradient = -(y - y_pred) * class_weights[:, np.newaxis]
         else:
-            return -(y - y_pred)
+            gradient = -(y - y_pred)
+
+        if normalize:
+            gradient /= y.shape[0]
+
+        return gradient
 
     def acc(self, y, y_pred):
         return accuracy_score(np.argmax(y, axis=1), np.argmax(y_pred, axis=1))
