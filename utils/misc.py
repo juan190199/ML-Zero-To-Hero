@@ -8,7 +8,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.mplot3d import Axes3D
 
 from utils.metrics import calculate_covariance_matrix
-from utils.data import standardize
+from utils.data import Scaler
 
 
 class Plot():
