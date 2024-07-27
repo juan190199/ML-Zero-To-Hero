@@ -3,7 +3,8 @@ import numpy as np
 
 sys.path.append('../')
 
-from utils import accuracy_score, to_categorical
+from utils.metrics import accuracy_score
+from utils.data import to_categorical
 
 
 class Loss(object):
