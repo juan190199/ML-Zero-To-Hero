@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 import numpy as np
-from utils.data_manipulation import normalize
-from utils.data_operation import euclidean_distance
+
+from utils.data import normalize
+from utils.metrics import euclidean_distance
 
 
 class KMeans():
