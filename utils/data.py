@@ -69,6 +69,57 @@ def batch_iterator(X, y=None, batch_size=64, drop_last=False):
             yield X[begin:end]
 
 
+class Scaler:
+    def fit(self, X):
+        raise NotImplementedError
+
+    def transform(self, X):
+        raise NotImplementedError
+
+    def fit_transform(self, X):
+        return self.fit(X).transform(X)
+
+    def inverse_transform(self, X):
+        return NotImplementedError
+
+
+class StandardScaler(Scaler):
+    def __init__(self):
+        self.mean_ = None
+        self.std_ = None
+
+    def fit(self, X):
+        self.mean_ = np.mean(X, axis=0)
+        self.std_ = np.std(X, axis=0)
+        return self
+
+    def transform(self, X):
+        return (X - self.mean_) / self.std_
+
+    def inverse_transform(self, X):
+        return (X * self.std_) + self.mean_
+
+
+class MinMaxScaler(Scaler):
+    def __init__(self, feature_range=(0, 1)):
+        self.min_ = None
+        self.scale_ = None
+        self.feature_range = feature_range
+
+    def fit(self, X):
+        self.min_ = np.min(X, axis=0)
+        self.scale_ = np.max(X, axis=0) - self.min_
+        return self
+
+    def transform(self, X):
+        X_std = (X - self.min_) / self.scale_
+        return X_std * (self.feature_range[1] - self.feature_range[0]) + self.feature_range[0]
+
+    def inverse_transform(self, X):
+        X_std = (X - self.feature_range[0]) / (self.feature_range[1] - self.feature_range[0])
+        return X_std * self.scale_ + self.min_
+
+
 def normalize(X, axis=-1, order=2):
     """
     Normalize dataset X
@@ -88,26 +139,6 @@ def normalize(X, axis=-1, order=2):
     l2 = np.atleast_1d(np.linalg.norm(X, order, axis))
     l2[l2 == 0] = 1
     return X / np.expand_dims(l2, axis)
-
-
-def standardize(X):
-    """
-    Standardize dataset X
-
-    :param X: ndarray of shape (n_samples, n_features)
-        Dataset
-
-    :return: ndarray of shape (n_samples, n_features)
-        Standardized dataset
-    """
-    X_std = X
-    mean = X.mean(axis=0)
-    std = X.std(axis=0)
-    for col in range(np.shape(X)[1]):
-        if std[col]:
-            X_std[:, col] = (X_std[:, col] - mean[col]) / std[col]
-    # X_std = (X - X.mean(axis=0)) / X.std(axis=0)
-    return X_std
 
 
 def train_test_split(X, y, test_size=0.5, shuffle=True, seed=None):
