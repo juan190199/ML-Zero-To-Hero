@@ -5,6 +5,7 @@ from utils.data import normalize, polynomial_features, make_diagonal, rescale_da
 from utils.metrics import calculate_covariance_matrix
 from utils.math_operations import soft_thresholding_operator
 
+
 class L1_Regularization():
     """
     Regularization for Lasso Regression
@@ -22,7 +23,7 @@ class L1_Regularization():
 
 class L2_Regularization():
     """
-    Regularization for Lasso Regression
+    Regularization for Ridge Regression
     """
 
     def __init__(self, alpha):
@@ -59,7 +60,7 @@ class Regression(object):
     """
     allowed_solvers = []
 
-    def __init__(self, max_iterations=1000, learning_rate=0.01, tol=1e-4, solver='gradient_descent'):
+    def __init__(self, max_iterations=1000, learning_rate=0.01, tol=1e-5, solver='gradient_descent'):
         """
 
         :param max_iterations: float
@@ -97,16 +98,6 @@ class Regression(object):
         self.w = np.random.uniform(-limit, limit, size=(n_features,))
 
     def fit(self, X, y, sample_weight=None):
-        """
-
-        Args:
-            X:
-            y:
-            sample_weight:
-
-        Returns:
-
-        """
         # Preprocess data
         X = normalize(polynomial_features(X, degree=self.degree))
         # Insert constant ones for bias weights
@@ -271,14 +262,6 @@ class RidgeRegression(Regression):
     """
 
     def __init__(self, reg_factor, max_iterations=1000, learning_rate=0.001, solver="gradient_descent"):
-        """
-
-        Args:
-            reg_factor:
-            max_iterations:
-            learning_rate:
-            solver:
-        """
         self.allowed_solvers = ["normal_equations", "gradient_descent", "coordinate_descent"]
         self.solver = solver
 
@@ -290,16 +273,6 @@ class RidgeRegression(Regression):
         super(RidgeRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate)
 
     def fit(self, X, y, sample_weights=None):
-        """
-
-        Args:
-            X:
-            y:
-            sample_weights:
-
-        Returns:
-
-        """
         super(RidgeRegression, self).fit(X, y, sample_weights)
 
 
@@ -336,16 +309,6 @@ class LassoRegression(Regression):
         super(LassoRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate, solver=solver)
 
     def fit(self, X, y, sample_weight=None):
-        """
-
-        Args:
-            X:
-            y:
-            sample_weight:
-
-        Returns:
-
-        """
         X = normalize(polynomial_features(X, degree=self.degree))
         super(LassoRegression, self).fit(X, y, sample_weight=sample_weight)
 
@@ -400,14 +363,6 @@ class ElasticNet(Regression):
         super(ElasticNet, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
-        """
-
-        Args:
-            X:
-
-        Returns:
-
-        """
         return super(ElasticNet, self).predict(X)
 
 
@@ -436,35 +391,13 @@ class PolynomialRegression(Regression):
         super(PolynomialRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate)
 
     def fit(self, X, y, sample_weight=None):
-        """
-
-        Args:
-            X:
-            y:
-            sample_weight:
-
-        Returns:
-
-        """
         super(PolynomialRegression, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
-        """
-
-        Args:
-            X:
-
-        Returns:
-
-        """
         return super(PolynomialRegression, self).predict(X)
 
 
 class PolynomialRidgeRegression(Regression):
-    """
-
-    """
-
     def __init__(self, degree, reg_factor, max_iterations=3000, learning_rate=0.01, solver='gradient_descent'):
         """
 
@@ -485,16 +418,6 @@ class PolynomialRidgeRegression(Regression):
         super(PolynomialRidgeRegression, self).__init__(max_iterations=max_iterations, learning_rate=learning_rate)
 
     def fit(self, X, y, sample_weight=None):
-        """
-
-        Args:
-            X:
-            y:
-            sample_weight:
-
-        Returns:
-
-        """
         super(PolynomialRidgeRegression, self).fit(X, y, sample_weight=sample_weight)
 
     def predict(self, X):
