@@ -29,7 +29,7 @@ The purpose of this project is to present the inner workings of the algorithms i
   - [LARS Lasso]()
   - [Orthogonal Matching Pursuit (OMP)]()
   - [Bayesian regression]()
-  - [Softmax regression](supervised_learning/linear_models/regression.py)
+  - [Softmax regression](supervised_learning/linear_models/linear_classifiers.py)
   - [Ridge Classifier](supervised_learning/linear_models/linear_classifiers.py)
   - [Generalized linear models]()
   - [Stochastic gradient descent]()
