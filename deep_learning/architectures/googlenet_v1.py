@@ -15,14 +15,30 @@ class ConvBlock(nn.Module):
             out_channels=out_channels,
             kernel_size=kernel_size, stride=stride, padding=padding, bias=bias
         )
-
         self.batchnorm2d = nn.BatchNorm2d(out_channels)
-
         self.relu = nn.ReLU()
 
     def forward(self, x):
         return self.relu(self.batchnorm2d(self.conv2d(x)))
 
+
+class AuxiliaryClassifier(nn.Module):
+    def __init__(self, in_channels, num_classes):
+        super().__init__()
+        self.avgpool = nn.AvgPool2d(kernel_size=5, stride=3)
+        self.conv = ConvBlock(in_channels=in_channels, out_channels=128, kernel_size=1, stride=1, padding=0)
+        self.fc1 = nn.Linear(in_features=128 * 4 * 4, out_features=1024)
+        self.dropout = nn.Dropout(0.7)
+        self.fc2 = nn.Linear(in_features=1024, out_features=num_classes)
+
+    def forward(self, x):
+        x = self.avgpool(x)
+        x = self.conv(x)
+        x = torch.flatten(x, start_dim=1)
+        x = self.fc1(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
 
 class InceptionBlock(nn.Module):
     """
@@ -78,6 +94,7 @@ class GoogLeNet_V1(nn.Module):
     def __init__(self, in_channels, num_classes):
         super().__init__()
 
+        # initial convolution and maxpool layers
         self.conv1 = ConvBlock(in_channels=in_channels, out_channels=64, kernel_size=7, stride=2, padding=3)
         self.maxpool1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
@@ -87,6 +104,7 @@ class GoogLeNet_V1(nn.Module):
         )
         self.maxpool2 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
+        # inception blocks
         self.inception3a = InceptionBlock(
             in_channels=192,
             out_1x1=64,
@@ -110,6 +128,8 @@ class GoogLeNet_V1(nn.Module):
             in_5x5=16, out_5x5=48,
             out_1x1_maxpool=64
         )
+        self.aux1 = AuxiliaryClassifier(in_channels=512, num_classes=num_classes)
+
         self.inception4b = InceptionBlock(
             in_channels=512,
             out_1x1=160,
@@ -131,6 +151,8 @@ class GoogLeNet_V1(nn.Module):
             in_5x5=32, out_5x5=64,
             out_1x1_maxpool=64
         )
+        self.aux2 = AuxiliaryClassifier(in_channels=528, num_classes=num_classes)
+
         self.inception4e = InceptionBlock(
             in_channels=528,
             out_1x1=256,
@@ -155,6 +177,7 @@ class GoogLeNet_V1(nn.Module):
             out_1x1_maxpool=128
         )
 
+        # Final layers
         self.avgpool = nn.AvgPool2d(kernel_size=7, stride=1)
         self.dropout = nn.Dropout(p=0.4)
         self.fc1 = nn.Linear(1024, num_classes)
@@ -171,9 +194,13 @@ class GoogLeNet_V1(nn.Module):
         x = self.maxpool3(x)
 
         x = self.inception4a(x)
+        aux1_out = self.aux1(x) if self.training else None
+
         x = self.inception4b(x)
         x = self.inception4c(x)
         x = self.inception4d(x)
+        aux2_out = self.aux2(x) if self.training else None
+
         x = self.inception4e(x)
         x = self.maxpool4(x)
 
@@ -185,4 +212,4 @@ class GoogLeNet_V1(nn.Module):
         x = torch.flatten(x, start_dim=1)
         x = self.fc1(x)
 
-        return x
+        return x, aux1_out, aux2_out
