@@ -16,6 +16,7 @@ class SpatialPyramidPooling(nn.Module):
             output_size = (pool_size, pool_size)
             pool = F.adaptive_max_pool2d(x, output_size=output_size)
             pooled_outputs.append(torch.flatten(pool, 1))
+            # pooled_outputs.append(torch.view(batch_size, -1))
 
         return torch.cat(pooled_outputs, dim=1)
 
